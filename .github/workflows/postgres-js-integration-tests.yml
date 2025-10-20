@@ -1,4 +1,4 @@
-name: Aurora DSQL JDBC Connector Tests
+name: Aurora DSQL Connector for Postgres.js Tests
 
 permissions: {}
 
@@ -7,10 +7,12 @@ on:
     branches: [ main ]
     paths:
       - "packages/postgres-js/**"
+      - ".github/workflows/postgres-js-integration-tests.yml"
   pull_request:
     branches: [ main ]
     paths:
       - "packages/postgres-js/**"
+      - ".github/workflows/postgres-js-integration-tests.yml"
   # Give us a button to allow running the workflow on demand for testing.
   workflow_dispatch:
     inputs:
@@ -52,17 +54,17 @@ jobs:
             --no-deletion-protection-enabled \
             --region ${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }} \
             --tags Name=jdbc-connector-${{ github.run_id }})
-          CLUSTER_ID=$(echo "$RESULT" | jq -r '.identifier')
+          PGJS_CLUSTER_ID=$(echo "$RESULT" | jq -r '.identifier')
           
           aws dsql wait cluster-active \
-            --identifier "$CLUSTER_ID" \
+            --identifier "$PGJS_CLUSTER_ID" \
             --region ${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }}
           
-          echo "cluster-id=$CLUSTER_ID" >> $GITHUB_OUTPUT
+          echo "pgjs-cluster-id=$PGJS_CLUSTER_ID" >> $GITHUB_OUTPUT
 
   run-tests:
     name: Node-postgres tests
-    needs: [setup]
+    needs: [setup, create-cluster]
     runs-on: ubuntu-latest
 
     strategy:
@@ -110,6 +112,6 @@ jobs:
       - name: Delete Aurora DSQL cluster
         run: |
           aws dsql delete-cluster \
-            --identifier "${{ needs.create-cluster.outputs.cluster-id }}" \
+            --identifier "${{ needs.create-cluster.outputs.pgjs-cluster-id }}" \
             --region ${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }} \
             > /dev/null
