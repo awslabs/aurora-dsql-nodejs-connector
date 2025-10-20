@@ -63,7 +63,7 @@ jobs:
           echo "pgjs-cluster-id=$PGJS_CLUSTER_ID" >> $GITHUB_OUTPUT
 
   run-tests:
-    name: Node-postgres tests
+    name: Postgres.js tests
     needs: [setup, create-cluster]
     runs-on: ubuntu-latest
     permissions:
@@ -92,6 +92,8 @@ jobs:
 
       - name: Run tests
         working-directory: ./packages/postgres-js
+        env:
+          CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.pgjs-cluster-id }}.dsql.${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }}.on.aws
         run: |
           npm install
           npm run test
