@@ -94,6 +94,7 @@ jobs:
         working-directory: ./packages/postgres-js
         env:
           CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.pgjs-cluster-id }}.dsql.${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }}.on.aws
+          REGION: ${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }}
         run: |
           npm install
           npm run test
