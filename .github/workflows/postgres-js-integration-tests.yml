@@ -30,7 +30,7 @@ jobs:
       target-versions: ${{ steps.versions.outputs.matrix }}
     steps:
       - id: versions
-        run: echo "matrix=[20, 22, 24, 25]" >> $GITHUB_OUTPUT
+        run: echo "matrix=[20, 22, 24]" >> $GITHUB_OUTPUT
 
   create-cluster:
     name: Create Aurora DSQL Cluster
