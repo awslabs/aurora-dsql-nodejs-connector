@@ -39,7 +39,7 @@ jobs:
     permissions:
       id-token: write # required by aws-actions/configure-aws-credentials
     outputs:
-      cluster-id: ${{ steps.create.outputs.cluster-id }}
+      pgjs-cluster-id: ${{ steps.create.outputs.pgjs-cluster-id }}
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
