@@ -13,6 +13,7 @@ async function verifySuccessfulConnection(sql: postgres.Sql<Record<string, postg
 describe('DSQL Integration Tests', () => {
     const clusterEndpoint = process.env.CLUSTER_ENDPOINT;
     const region = process.env.REGION;
+    const iamRole = process.env.IAM_ROLE;
 
     test('should connect to DSQL cluster', async () => {
         const sql = auroraDSQLPostgres({
@@ -115,18 +116,30 @@ describe('DSQL Integration Tests', () => {
     });
 
     test('should connect with non-admin user', async () => {
-        const sql = auroraDSQLPostgres({
+        let username = 'testuser';
+        const adminSql = auroraDSQLPostgres({
             host: clusterEndpoint,
             database: 'postgres',
-            username: 'testuser',
+            username: 'admin',
+            region: region,
+        });
+
+        const nonAdminSql = auroraDSQLPostgres({
+            host: clusterEndpoint,
+            database: 'postgres',
+            username: username,
             region: region,
         });
 
         try {
-            const result = await sql`SELECT current_user as username`;
-            expect(result[0].username).toBe('testuser');
+            await adminSql`CREATE ROLE ${adminSql(username)} WITH LOGIN`;
+            await adminSql.unsafe(`AWS IAM GRANT ${username} TO '${iamRole}'`);
+
+            const result = await nonAdminSql`SELECT current_user as username`;
+            expect(result[0].username).toBe(username);
         } finally {
-            await sql.end();
+            await adminSql.end()
+            await nonAdminSql.end();
         }
     });
 
