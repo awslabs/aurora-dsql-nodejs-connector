@@ -1,6 +1,7 @@
 name: Aurora DSQL Connector for Postgres.js Tests
 
-permissions: {}
+permissions:
+  contents: read
 
 on:
   push:
