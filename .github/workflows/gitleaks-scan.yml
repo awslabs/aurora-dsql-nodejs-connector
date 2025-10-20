@@ -1,6 +1,7 @@
 name: Gitleaks scan
 
-permissions: {}
+permissions:
+  contents: read
 
 on:
   push:
