@@ -67,7 +67,8 @@ jobs:
     name: Node-postgres tests
     needs: [setup, create-cluster]
     runs-on: ubuntu-latest
-
+    permissions:
+      id-token: write # required by aws-actions/configure-aws-credentials
     strategy:
       max-parallel: 1
       fail-fast: true
