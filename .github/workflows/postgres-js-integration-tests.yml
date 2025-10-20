@@ -1,7 +1,6 @@
 name: Aurora DSQL Connector for Postgres.js Tests
 
-permissions:
-  contents: read
+permissions: {}
 
 on:
   push:
@@ -68,6 +67,7 @@ jobs:
     needs: [setup, create-cluster]
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       id-token: write # required by aws-actions/configure-aws-credentials
     strategy:
       max-parallel: 1
