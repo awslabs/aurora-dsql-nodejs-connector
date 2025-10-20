@@ -95,6 +95,7 @@ jobs:
         env:
           CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.pgjs-cluster-id }}.dsql.${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }}.on.aws
           REGION: ${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }}
+          IAM_ROLE: $${{ secrets.AURORA_DSQL_NODEJS_IAM_ROLE }}
         run: |
           npm install
           npm run test

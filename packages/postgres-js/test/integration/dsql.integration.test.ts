@@ -1,6 +1,8 @@
 import {auroraDSQLPostgres} from '../../src/client';
 import postgres from "postgres";
 
+jest.setTimeout(30000);
+
 async function verifySuccessfulConnection(sql: postgres.Sql<Record<string, postgres.PostgresType> extends {} ? {} : any>) {
     try {
         const result = await sql`SELECT 1 as test_value`;
@@ -115,7 +117,8 @@ describe('DSQL Integration Tests', () => {
         }
     });
 
-    test('should connect with non-admin user', async () => {
+    // Skip test if IAM role is not provided
+    (iamRole ? test : test.skip)('should connect with non-admin user', async () => {
         let username = 'testuser';
         const adminSql = auroraDSQLPostgres({
             host: clusterEndpoint,
@@ -132,14 +135,19 @@ describe('DSQL Integration Tests', () => {
         });
 
         try {
-            await adminSql`CREATE ROLE ${adminSql(username)} WITH LOGIN`;
+            await adminSql.unsafe(`CREATE ROLE ${username} WITH LOGIN`);
             await adminSql.unsafe(`AWS IAM GRANT ${username} TO '${iamRole}'`);
 
             const result = await nonAdminSql`SELECT current_user as username`;
             expect(result[0].username).toBe(username);
         } finally {
-            await adminSql.end()
             await nonAdminSql.end();
+            try {
+                await adminSql.unsafe(`AWS IAM REVOKE ${username} FROM '${iamRole}'`);
+                await adminSql.unsafe(`DROP ROLE ${username}`);
+            } finally {
+                await adminSql.end();
+            }
         }
     });
 
