@@ -32,7 +32,7 @@ jobs:
 
   create-cluster:
     name: Create Aurora DSQL Cluster
-    needs: [setup, unit-tests]
+    needs: [setup]
     runs-on: ubuntu-latest
     permissions:
       id-token: write # required by aws-actions/configure-aws-credentials
@@ -43,7 +43,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AURORA_DSQL_NODEJS_IAM_ROLE }}
-          aws-region: ${{ secrets.AURORA_DSQL_NODEJS_INTEGRATION_CLUSTER_REGION }}
+          aws-region: ${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }}
 
       - name: Create Aurora DSQL cluster
         id: create
@@ -62,7 +62,7 @@ jobs:
 
   run-tests:
     name: Node-postgres tests
-    needs: [setup, build]
+    needs: [setup]
     runs-on: ubuntu-latest
 
     strategy:
@@ -95,7 +95,7 @@ jobs:
 
   delete-cluster:
     name: Delete Aurora DSQL Cluster
-    needs: [setup, create-cluster, gradle-integration-tests, integration-tests]
+    needs: [setup, create-cluster, run-tests]
     runs-on: ubuntu-latest
     if: always() && needs.create-cluster.result == 'success'
     permissions:
