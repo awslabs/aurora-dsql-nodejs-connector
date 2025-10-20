@@ -36,7 +36,7 @@ describe('AuroraDSQLPostgres', () => {
         mockDsqlSigner = dsqlModule.DsqlSigner;
 
         // Import after mocking
-        const module = await import('../src/client.js');
+        const module = await import('../src/client');
         AuroraDSQLPostgres = module.auroraDSQLPostgres;
     });
 
