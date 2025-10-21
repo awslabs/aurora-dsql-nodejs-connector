@@ -34,7 +34,7 @@ jobs:
 
   run-tests:
     name: Node-postgres tests
-    needs: [setup, create-cluster]
+    needs: [setup]
     runs-on: ubuntu-latest
     permissions:
       contents: read
