@@ -1,4 +1,4 @@
-# Aurora DSQL Node.js Connectors
+# Aurora DSQL Connectors for Node.js
 
 This repository contains Node.js connectors for [Amazon Aurora DSQL](https://aws.amazon.com/rds/aurora/dsql/), a distributed SQL database service that provides high availability and scalability for PostgreSQL-compatible applications.
 
