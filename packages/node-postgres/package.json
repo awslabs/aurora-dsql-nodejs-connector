@@ -1,5 +1,5 @@
 {
-  "name": "aurora-dsql-node-postgres-connector",
+  "name": "@aws/aurora-dsql-node-postgres-connector",
   "version": "1.0.0",
   "description": "An AWS Aurora DSQL connector with IAM authentication for node-postgres",
   "main": "index.ts",
