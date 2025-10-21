@@ -1,4 +1,4 @@
-# Aurora DSQL Node.js Connectors
+# Aurora DSQL Connectors for Node.js
 
 This repository contains Node.js connectors for [Amazon Aurora DSQL](https://aws.amazon.com/rds/aurora/dsql/), a distributed SQL database service that provides high availability and scalability for PostgreSQL-compatible applications.
 
@@ -6,13 +6,13 @@ Aurora DSQL requires IAM-based authentication with time-limited tokens that exis
 
 ## Available Connectors
 
-### [Aurora DSQL Connector with node-postgres](./packages/node-postgres/)
+### [Aurora DSQL Connector for node-postgres](./packages/node-postgres/)
 
 Built on [node-postgres](https://node-postgres.com/), the most popular PostgreSQL client for Node.js. This connector extends the node-postgres Client and Pool with automatic IAM authentication for Aurora DSQL.
 
 [View Documentation](./packages/node-postgres/README.md)
 
-### [Aurora DSQL Connector with Postgres.js](./packages/postgres-js/)
+### [Aurora DSQL Connector for Postgres.js](./packages/postgres-js/)
 
 Built on [Postgres.js](https://github.com/porsager/postgres), a fast and modern PostgreSQL client. This connector provides IAM authentication while maintaining Postgres.js's tagged template literal query syntax.
 
