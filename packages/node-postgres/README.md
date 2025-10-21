@@ -1,6 +1,6 @@
-# Aurora DSQL Connector with node-postgres
+# Aurora DSQL Connector for node-postgres
 
-The Aurora DSQL Connector with node-postgres is a Node.js connector built on [node-postgres](https://node-postgres.com/) 
+The Aurora DSQL Connector for node-postgres is a Node.js connector built on [node-postgres](https://node-postgres.com/) 
 that integrates IAM Authentication for connecting JavaScript/TypeScript applications to Amazon Aurora DSQL clusters.
 
 The Aurora DSQL Connector is designed as an authentication plugin that extends the functionality of the
@@ -10,7 +10,7 @@ node-postgres' Client and Pool to enable applications to authenticate with Amazo
 
 Amazon Aurora DSQL is a cloud-native distributed database with PostgreSQL compatibility. While it requires IAM authentication and time-bound tokens, traditional Node.js database drivers lack this built-in support.
 
-The Aurora DSQL Connector with node-postgres bridges this gap by implementing an authentication middleware that works seamlessly with node-postgres. This approach allows developers to maintain their existing node-postgres code while gaining secure IAM-based access to Aurora DSQL clusters through automated token management.
+The Aurora DSQL Connector for node-postgres bridges this gap by implementing an authentication middleware that works seamlessly with node-postgres. This approach allows developers to maintain their existing node-postgres code while gaining secure IAM-based access to Aurora DSQL clusters through automated token management.
 
 
 ### Features
