@@ -1,5 +1,5 @@
 {
-  "name": "aurora-dsql-postgresjs-connector",
+  "name": "@aws/aurora-dsql-postgresjs-connector",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
