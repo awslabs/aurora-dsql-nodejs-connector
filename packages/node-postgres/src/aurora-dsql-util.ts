@@ -6,6 +6,8 @@ import { AuroraDSQLPoolConfig } from "./config/aurora-dsql-pool-config";
 import { parse } from "pg-connection-string";
 
 const ADMIN_USER = "admin";
+const PRE_REGION_HOST_PATTERN = ".dsql.";
+const POST_REGION_HOST_PATTERN = ".on.aws";
 
 export class AuroraDSQLUtil {
   public static parseRegion(host: string): string {
@@ -61,7 +63,7 @@ export class AuroraDSQLUtil {
     return token;
   }
 
-  public static validatePgConfig(config: string | AuroraDSQLConfig): AuroraDSQLConfig {
+  public static validatePgConfig(config: string | AuroraDSQLConfig | AuroraDSQLPoolConfig): AuroraDSQLConfig | AuroraDSQLPoolConfig {
     let dsqlConfig: AuroraDSQLConfig;
     if (typeof config === "string") {
       dsqlConfig = parse(config) as AuroraDSQLConfig;
@@ -73,18 +75,29 @@ export class AuroraDSQLUtil {
       throw new Error("Host is required");
     }
 
-    if (!dsqlConfig.user) {
-      throw new Error("User is required");
+    // check if host is a clusterId or cluster endpoint
+    try {
+      dsqlConfig.region = AuroraDSQLUtil.parseRegion(dsqlConfig.host);
+    } catch (error) {
+      //clusterId is specified in the host name
+      dsqlConfig.region = dsqlConfig.region || process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION;
+      if (dsqlConfig.region === undefined) {
+        throw new Error("Region is not specified");
+      }
+      dsqlConfig.host = AuroraDSQLUtil.buildHostnameFromIdAndRegion(dsqlConfig.host!, dsqlConfig.region);
     }
 
     dsqlConfig = {
+      user: "admin",
       port: 5432,
-      region: dsqlConfig.region || AuroraDSQLUtil.parseRegion(dsqlConfig.host),
       database: "postgres",
-      profile: process.env.AWS_PROFILE || "default",
       ssl: { rejectUnauthorized: true },
       ...dsqlConfig
     };
     return dsqlConfig;
+  }
+
+  public static buildHostnameFromIdAndRegion(clusterId: string, region: string | undefined) {
+    return clusterId + PRE_REGION_HOST_PATTERN + region + POST_REGION_HOST_PATTERN;
   }
 }
