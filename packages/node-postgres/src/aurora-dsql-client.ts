@@ -1,3 +1,7 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { Client } from "pg";
 import { AuroraDSQLConfig } from "./config/aurora-dsql-config";
 import { AuroraDSQLUtil } from "./aurora-dsql-util";

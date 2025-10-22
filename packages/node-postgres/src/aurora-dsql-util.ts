@@ -1,3 +1,7 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { DsqlSigner } from "@aws-sdk/dsql-signer";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { AwsCredentialIdentity, AwsCredentialIdentityProvider } from "@smithy/types";

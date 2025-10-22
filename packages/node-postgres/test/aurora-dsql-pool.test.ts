@@ -1,3 +1,7 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { AuroraDSQLPool } from "../src/aurora-dsql-pool";
 import { AuroraDSQLUtil } from "../src/aurora-dsql-util";
 import { Pool, PoolClient } from "pg";
