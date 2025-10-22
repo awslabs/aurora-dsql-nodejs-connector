@@ -5,6 +5,9 @@
 import js from '@eslint/js';
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
+import header from 'eslint-plugin-header';
+
+header.rules.header.meta.schema = false;
 
 export default [
   js.configs.recommended,
@@ -24,7 +27,8 @@ export default [
       }
     },
     plugins: {
-      '@typescript-eslint': tseslint
+      '@typescript-eslint': tseslint,
+      'header': header
     },
     rules: {
       'semi': ['error', 'always'],
@@ -35,7 +39,17 @@ export default [
       '@typescript-eslint/no-explicit-any': 'warn',
       'no-unused-vars': 'off', // Use TypeScript version instead
       'no-redeclare': 'off', // Allow function overloads
-      'no-undef': 'off' // TypeScript handles this
+      'no-undef': 'off', // TypeScript handles this
+      'header/header': [
+        'error',
+        'block',
+        [
+          '',
+          ' * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.',
+          ' * SPDX-License-Identifier: Apache-2.0',
+          ' '
+        ]
+      ]
     }
   }
 ];
