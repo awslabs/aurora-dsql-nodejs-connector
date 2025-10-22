@@ -148,11 +148,9 @@ describe("AuroraDSQLPool", () => {
     let mockConnect: jest.Mock;
     let pool: AuroraDSQLPool;
     let mockClient: PoolClient;
-    let mockDone: jest.Mock;
 
     beforeEach(() => {
       mockClient = {} as PoolClient;
-      mockDone = jest.fn();
       mockConnect = jest.fn().mockResolvedValue(mockClient);
       mockPool.prototype.connect = mockConnect;
 

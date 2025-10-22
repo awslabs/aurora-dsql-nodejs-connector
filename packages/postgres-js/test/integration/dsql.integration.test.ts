@@ -161,7 +161,7 @@ describe('DSQL Integration Tests', () => {
     });
 
     test('should handle clusterID as host', async () => {
-        const clusterID = clusterEndpoint!.split(".")[0]
+        const clusterID = clusterEndpoint!.split(".")[0];
         const sql = auroraDSQLPostgres( {
             host: clusterID,
             region: region,
@@ -171,7 +171,7 @@ describe('DSQL Integration Tests', () => {
     });
 
     test('should handle clusterID as host in connection string', async () => {
-        const clusterID = clusterEndpoint!.split(".")[0]
+        const clusterID = clusterEndpoint!.split(".")[0];
         const connectionString = `postgres://${clusterID}`;
 
         const sql = auroraDSQLPostgres(connectionString, {

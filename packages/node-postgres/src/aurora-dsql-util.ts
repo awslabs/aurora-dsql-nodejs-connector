@@ -78,7 +78,7 @@ export class AuroraDSQLUtil {
     // check if host is a clusterId or cluster endpoint
     try {
       dsqlConfig.region = AuroraDSQLUtil.parseRegion(dsqlConfig.host);
-    } catch (error) {
+    } catch {
       //clusterId is specified in the host name
       dsqlConfig.region = dsqlConfig.region || process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION;
       if (dsqlConfig.region === undefined) {
