@@ -1,3 +1,7 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import postgres, {PostgresType} from "postgres";
 import {AwsCredentialIdentity, AwsCredentialIdentityProvider} from "@aws-sdk/types";
 import {DsqlSigner, DsqlSignerConfig} from "@aws-sdk/dsql-signer";
