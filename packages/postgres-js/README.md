@@ -119,7 +119,7 @@ All standard [Postgres.js options](https://github.com/porsager/postgres?tab=read
 The connector automatically handles DSQL authentication by generating tokens using the DSQL client token generator. If he
 AWS region is not provided, it will be automatically parsed from the hostname provided.
 
-For more information on authentication in Aurora DSQL, see the [user guide](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/SECTION_program-with-jdbc-connector.html).
+For more information on authentication in Aurora DSQL, see the [user guide](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/authentication-authorization.html).
 
 ### Admin vs Regular Users
 
