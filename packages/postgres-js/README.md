@@ -7,7 +7,7 @@ The Aurora DSQL Connector for Postgres.js is designed as an authentication plugi
 Postgres.js client to enable applications to authenticate with Amazon Aurora DSQL using IAM credentials. The connector 
 does not connect directly to the database, but provides seamless IAM authentication on top of the underlying Postgres.js driver.
 
-## About the Connector
+## Benefits of the Connector
 
 Amazon Aurora DSQL is a distributed SQL database service that provides high availability and scalability for 
 PostgreSQL-compatible applications. Aurora DSQL requires IAM-based authentication with time-limited tokens that 
