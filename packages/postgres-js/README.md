@@ -7,7 +7,7 @@ The Aurora DSQL Connector for Postgres.js is designed as an authentication plugi
 Postgres.js client to enable applications to authenticate with Amazon Aurora DSQL using IAM credentials. The connector 
 does not connect directly to the database, but provides seamless IAM authentication on top of the underlying Postgres.js driver.
 
-## About the Connector
+## Benefits of the Connector
 
 Amazon Aurora DSQL is a distributed SQL database service that provides high availability and scalability for 
 PostgreSQL-compatible applications. Aurora DSQL requires IAM-based authentication with time-limited tokens that 
@@ -16,6 +16,9 @@ existing Node.js drivers do not natively support.
 The idea behind the Aurora DSQL Connector for Postgres.js is to add an authentication layer on top of the Postgres.js 
 client that handles IAM token generation, allowing users to connect to Aurora DSQL without changing their existing Postgres.js workflows.
 
+The Aurora DSQL Connector for Postgres.js works with most versions of Postgres.js. Users provide their own version by installing
+Postgres.js directly.
+
 ### Features
 
 - **Automatic IAM Authentication** - Handles DSQL token generation and refresh
@@ -23,7 +26,6 @@ client that handles IAM token generation, allowing users to connect to Aurora DS
 - **Region Auto-Discovery** - Extracts AWS region from DSQL cluster hostname
 - **Full TypeScript Support** - Provides full type safety
 - **Custom Credentials** - Support for custom AWS credential providers
-
 
 ## Quick start guide
 
@@ -37,6 +39,8 @@ client that handles IAM token generation, allowing users to connect to Aurora DS
 
 ```bash
 npm install aurora-dsql-postgres
+# Postgres.js is a peer-dependency, so users must install it themselves
+npm install postgres
 ```
 
 ### Basic Usage
@@ -112,16 +116,16 @@ All standard [Postgres.js options](https://github.com/porsager/postgres?tab=read
 
 ## Authentication
 
-The connector automatically handles DSQL authentication by generating tokens using the DSQL client token generator. If he
+The connector automatically handles DSQL authentication by generating tokens using the DSQL client token generator. If the
 AWS region is not provided, it will be automatically parsed from the hostname provided.
+
+For more information on authentication in Aurora DSQL, see the [user guide](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/authentication-authorization.html).
 
 ### Admin vs Regular Users
 
 - Users named `"admin"` automatically use admin authentication tokens
 - All other users use regular authentication tokens
 - Tokens are generated dynamically for each connection
-
-
 
 ## Development
 
