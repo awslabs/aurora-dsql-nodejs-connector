@@ -82,7 +82,7 @@ export function auroraDSQLPostgres<T extends Record<string, postgres.PostgresTyp
     }
     let signer = new DsqlSigner(signerConfig);
     opts.password = () => getToken(signer, username);
-    if (database === undefined) opts.database = DEFAULT_DATABASE;
+    if (!database) opts.database = DEFAULT_DATABASE;
     if (!ssl) opts.ssl = true;
     return typeof urlOrOptions === 'string' ? postgres(urlOrOptions, opts) : postgres(opts);
 }
