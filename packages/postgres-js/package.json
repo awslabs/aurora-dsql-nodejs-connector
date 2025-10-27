@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@aws-sdk/credential-providers": "^3.901.0",
-    "@aws-sdk/dsql-signer": "^3.901.0"
+    "@aws-sdk/dsql-signer": "^3.917.0"
   },
   "peerDependencies": {
     "postgres": "^3.4.7"
