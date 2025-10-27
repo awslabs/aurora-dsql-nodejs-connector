@@ -32,39 +32,9 @@ jobs:
       - id: versions
         run: echo "matrix=[20, 22, 24]" >> $GITHUB_OUTPUT
 
-  create-cluster:
-    name: Create Aurora DSQL Cluster
-    needs: [setup]
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write # required by aws-actions/configure-aws-credentials
-    outputs:
-      pgjs-cluster-id: ${{ steps.create.outputs.pgjs-cluster-id }}
-    steps:
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AURORA_DSQL_NODEJS_IAM_ROLE }}
-          aws-region: ${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }}
-
-      - name: Create Aurora DSQL cluster
-        id: create
-        run: |
-          RESULT=$(aws dsql create-cluster \
-            --no-deletion-protection-enabled \
-            --region ${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }} \
-            --tags Name=jdbc-connector-${{ github.run_id }})
-          PGJS_CLUSTER_ID=$(echo "$RESULT" | jq -r '.identifier')
-          
-          aws dsql wait cluster-active \
-            --identifier "$PGJS_CLUSTER_ID" \
-            --region ${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }}
-          
-          echo "pgjs-cluster-id=$PGJS_CLUSTER_ID" >> $GITHUB_OUTPUT
-
   run-tests:
     name: Postgres.js tests
-    needs: [setup, create-cluster]
+    needs: [setup]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -93,32 +63,10 @@ jobs:
       - name: Run tests
         working-directory: ./packages/postgres-js
         env:
-          CLUSTER_ENDPOINT: ${{ needs.create-cluster.outputs.pgjs-cluster-id }}.dsql.${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }}.on.aws
+          CLUSTER_ENDPOINT: ${{ secrets.AURORA_DSQL_INTEGRATION_POSTGRESJS_CLUSTER_EDNPOINT }}
           REGION: ${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }}
           IAM_ROLE: $${{ secrets.AURORA_DSQL_NODEJS_IAM_ROLE }}
         run: |
           npm install
           npm run lint
           npm run test
-
-
-  delete-cluster:
-    name: Delete Aurora DSQL Cluster
-    needs: [setup, create-cluster, run-tests]
-    runs-on: ubuntu-latest
-    if: always() && needs.create-cluster.result == 'success'
-    permissions:
-      id-token: write # required by aws-actions/configure-aws-credentials
-    steps:
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AURORA_DSQL_NODEJS_IAM_ROLE }}
-          aws-region: ${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }}
-
-      - name: Delete Aurora DSQL cluster
-        run: |
-          aws dsql delete-cluster \
-            --identifier "${{ needs.create-cluster.outputs.pgjs-cluster-id }}" \
-            --region ${{ secrets.AURORA_DSQL_INTEGRATION_CLUSTER_REGION }} \
-            > /dev/null
