@@ -10,7 +10,9 @@ jest.mock("@aws-sdk/dsql-signer");
 jest.mock("@aws-sdk/credential-providers");
 
 const mockDsqlSigner = DsqlSigner as jest.MockedClass<typeof DsqlSigner>;
-const mockFromNodeProviderChain = fromNodeProviderChain as jest.MockedFunction<typeof fromNodeProviderChain>;
+const mockFromNodeProviderChain = fromNodeProviderChain as jest.MockedFunction<
+  typeof fromNodeProviderChain
+>;
 
 describe("AuroraDSQLUtil", () => {
   beforeEach(() => {
@@ -26,16 +28,24 @@ describe("AuroraDSQLUtil", () => {
     });
 
     it("should parse region from different regions", () => {
-      expect(AuroraDSQLUtil.parseRegion("cluster.dsql.eu-west-1.on.aws")).toBe("eu-west-1");
-      expect(AuroraDSQLUtil.parseRegion("cluster.dsql.ap-south-1.on.aws")).toBe("ap-south-1");
+      expect(AuroraDSQLUtil.parseRegion("cluster.dsql.eu-west-1.on.aws")).toBe(
+        "eu-west-1"
+      );
+      expect(AuroraDSQLUtil.parseRegion("cluster.dsql.ap-south-1.on.aws")).toBe(
+        "ap-south-1"
+      );
     });
 
     it("should throw error when hostname is empty", () => {
-      expect(() => AuroraDSQLUtil.parseRegion("")).toThrow("Hostname is required to parse region");
+      expect(() => AuroraDSQLUtil.parseRegion("")).toThrow(
+        "Hostname is required to parse region"
+      );
     });
 
     it("should throw error when hostname format is invalid", () => {
-      expect(() => AuroraDSQLUtil.parseRegion("invalid-hostname")).toThrow("Unable to parse region from hostname");
+      expect(() => AuroraDSQLUtil.parseRegion("invalid-hostname")).toThrow(
+        "Unable to parse region from hostname"
+      );
     });
   });
 
@@ -45,69 +55,126 @@ describe("AuroraDSQLUtil", () => {
 
     beforeEach(() => {
       mockFromNodeProviderChain.mockReturnValue(mockCredential as any);
-      mockDsqlSigner.prototype.getDbConnectAdminAuthToken = jest.fn().mockResolvedValue(mockToken);
-      mockDsqlSigner.prototype.getDbConnectAuthToken = jest.fn().mockResolvedValue(mockToken);
+      mockDsqlSigner.prototype.getDbConnectAdminAuthToken = jest
+        .fn()
+        .mockResolvedValue(mockToken);
+      mockDsqlSigner.prototype.getDbConnectAuthToken = jest
+        .fn()
+        .mockResolvedValue(mockToken);
     });
 
     it("should generate admin token for admin user", async () => {
-      const token = await AuroraDSQLUtil.getDSQLToken("cluster.dsql.us-east-1.on.aws", "admin", "default", "us-east-1");
+      const token = await AuroraDSQLUtil.getDSQLToken(
+        "cluster.dsql.us-east-1.on.aws",
+        "admin",
+        "default",
+        "us-east-1"
+      );
 
       expect(token).toBe(mockToken);
-      expect(mockDsqlSigner.prototype.getDbConnectAdminAuthToken).toHaveBeenCalled();
-      expect(mockDsqlSigner.prototype.getDbConnectAuthToken).not.toHaveBeenCalled();
+      expect(
+        mockDsqlSigner.prototype.getDbConnectAdminAuthToken
+      ).toHaveBeenCalled();
+      expect(
+        mockDsqlSigner.prototype.getDbConnectAuthToken
+      ).not.toHaveBeenCalled();
     });
 
     it("should generate regular token for non-admin user", async () => {
-      const token = await AuroraDSQLUtil.getDSQLToken("cluster.dsql.us-east-1.on.aws", "testuser", "default", "us-east-1");
+      const token = await AuroraDSQLUtil.getDSQLToken(
+        "cluster.dsql.us-east-1.on.aws",
+        "testuser",
+        "default",
+        "us-east-1"
+      );
 
       expect(token).toBe(mockToken);
       expect(mockDsqlSigner.prototype.getDbConnectAuthToken).toHaveBeenCalled();
-      expect(mockDsqlSigner.prototype.getDbConnectAdminAuthToken).not.toHaveBeenCalled();
+      expect(
+        mockDsqlSigner.prototype.getDbConnectAdminAuthToken
+      ).not.toHaveBeenCalled();
     });
 
     it("should use custom credentials provider when provided", async () => {
-      const customCredential = { accessKeyId: "custom", secretAccessKey: "custom" };
+      const customCredential = {
+        accessKeyId: "custom",
+        secretAccessKey: "custom",
+      };
 
-      await AuroraDSQLUtil.getDSQLToken("cluster.dsql.us-east-1.on.aws", "admin", "default", "us-east-1", undefined, customCredential as any);
+      await AuroraDSQLUtil.getDSQLToken(
+        "cluster.dsql.us-east-1.on.aws",
+        "admin",
+        "default",
+        "us-east-1",
+        undefined,
+        customCredential as any
+      );
 
       expect(mockFromNodeProviderChain).not.toHaveBeenCalled();
       expect(mockDsqlSigner).toHaveBeenCalledWith(
         expect.objectContaining({
-          credentials: customCredential
+          credentials: customCredential,
         })
       );
     });
 
     it("should use profile when no custom credentials", async () => {
-      await AuroraDSQLUtil.getDSQLToken("cluster.dsql.us-east-1.on.aws", "admin", "test-profile", "us-east-1");
+      await AuroraDSQLUtil.getDSQLToken(
+        "cluster.dsql.us-east-1.on.aws",
+        "admin",
+        "test-profile",
+        "us-east-1"
+      );
 
-      expect(mockFromNodeProviderChain).toHaveBeenCalledWith({ profile: "test-profile" });
+      expect(mockFromNodeProviderChain).toHaveBeenCalledWith({
+        profile: "test-profile",
+      });
     });
 
     it("should pass tokenDurationSecs to signer", async () => {
-      await AuroraDSQLUtil.getDSQLToken("cluster.dsql.us-east-1.on.aws", "admin", "default", "us-east-1", 3600);
+      await AuroraDSQLUtil.getDSQLToken(
+        "cluster.dsql.us-east-1.on.aws",
+        "admin",
+        "default",
+        "us-east-1",
+        3600
+      );
 
       expect(mockDsqlSigner).toHaveBeenCalledWith(
         expect.objectContaining({
-          expiresIn: 3600
+          expiresIn: 3600,
         })
       );
     });
 
     it("should throw error when token generation fails", async () => {
-      mockDsqlSigner.prototype.getDbConnectAdminAuthToken = jest.fn().mockRejectedValue(new Error("Auth failed"));
+      mockDsqlSigner.prototype.getDbConnectAdminAuthToken = jest
+        .fn()
+        .mockRejectedValue(new Error("Auth failed"));
 
-      await expect(AuroraDSQLUtil.getDSQLToken("cluster.dsql.us-east-1.on.aws", "admin", "default", "us-east-1")).rejects.toThrow(
-        "Failed to generate DSQL token"
-      );
+      await expect(
+        AuroraDSQLUtil.getDSQLToken(
+          "cluster.dsql.us-east-1.on.aws",
+          "admin",
+          "default",
+          "us-east-1"
+        )
+      ).rejects.toThrow("Failed to generate DSQL token");
     });
 
     it("should throw error when token is empty", async () => {
-      mockDsqlSigner.prototype.getDbConnectAdminAuthToken = jest.fn().mockResolvedValue("");
+      mockDsqlSigner.prototype.getDbConnectAdminAuthToken = jest
+        .fn()
+        .mockResolvedValue("");
 
-      await expect(AuroraDSQLUtil.getDSQLToken("cluster.dsql.us-east-1.on.aws", "admin", "default", "us-east-1")).rejects.toThrow(
-        "Failed to retrieve DSQL token - token is empty"
-      );
+      await expect(
+        AuroraDSQLUtil.getDSQLToken(
+          "cluster.dsql.us-east-1.on.aws",
+          "admin",
+          "default",
+          "us-east-1"
+        )
+      ).rejects.toThrow("Failed to retrieve DSQL token - token is empty");
     });
   });
 
@@ -115,10 +182,10 @@ describe("AuroraDSQLUtil", () => {
     it("should validate config with full hostname", () => {
       const config = {
         host: "cluster.dsql.us-east-1.on.aws",
-        user: "testuser"
+        user: "testuser",
       };
 
-      const result = AuroraDSQLUtil.validatePgConfig(config);
+      const result = AuroraDSQLUtil.parsePgConfig(config);
 
       expect(result).toMatchObject({
         host: "cluster.dsql.us-east-1.on.aws",
@@ -126,14 +193,15 @@ describe("AuroraDSQLUtil", () => {
         port: 5432,
         database: "postgres",
         region: "us-east-1",
-        ssl: { rejectUnauthorized: true }
+        ssl: { rejectUnauthorized: true },
       });
     });
 
     it("should parse connection string", () => {
-      const connectionString = "postgresql://testuser@cluster.dsql.us-east-1.on.aws:5432/testdb";
+      const connectionString =
+        "postgresql://testuser@cluster.dsql.us-east-1.on.aws:5432/testdb";
 
-      const result = AuroraDSQLUtil.validatePgConfig(connectionString);
+      const result = AuroraDSQLUtil.parsePgConfig(connectionString);
 
       expect(result.user).toBe("testuser");
       expect(result.host).toBe("cluster.dsql.us-east-1.on.aws");
@@ -143,10 +211,10 @@ describe("AuroraDSQLUtil", () => {
       const config = {
         host: "cluster123",
         user: "admin",
-        region: "us-west-2"
+        region: "us-west-2",
       };
 
-      const result = AuroraDSQLUtil.validatePgConfig(config);
+      const result = AuroraDSQLUtil.parsePgConfig(config);
 
       expect(result.host).toBe("cluster123.dsql.us-west-2.on.aws");
       expect(result.region).toBe("us-west-2");
@@ -157,10 +225,10 @@ describe("AuroraDSQLUtil", () => {
 
       const config = {
         host: "cluster123",
-        user: "admin"
+        user: "admin",
       };
 
-      const result = AuroraDSQLUtil.validatePgConfig(config);
+      const result = AuroraDSQLUtil.parsePgConfig(config);
 
       expect(result.host).toBe("cluster123.dsql.eu-west-1.on.aws");
       expect(result.region).toBe("eu-west-1");
@@ -171,20 +239,20 @@ describe("AuroraDSQLUtil", () => {
 
       const config = {
         host: "cluster123",
-        user: "admin"
+        user: "admin",
       };
 
-      const result = AuroraDSQLUtil.validatePgConfig(config);
+      const result = AuroraDSQLUtil.parsePgConfig(config);
 
       expect(result.region).toBe("ap-south-1");
     });
 
     it("should set default user to admin", () => {
       const config = {
-        host: "cluster.dsql.us-east-1.on.aws"
+        host: "cluster.dsql.us-east-1.on.aws",
       };
 
-      const result = AuroraDSQLUtil.validatePgConfig(config);
+      const result = AuroraDSQLUtil.parsePgConfig(config);
 
       expect(result.user).toBe("admin");
     });
@@ -194,10 +262,10 @@ describe("AuroraDSQLUtil", () => {
         host: "cluster.dsql.us-east-1.on.aws",
         user: "custom",
         port: 3306,
-        database: "mydb"
+        database: "mydb",
       };
 
-      const result = AuroraDSQLUtil.validatePgConfig(config);
+      const result = AuroraDSQLUtil.parsePgConfig(config);
 
       expect(result.user).toBe("custom");
       expect(result.port).toBe(3306);
@@ -207,28 +275,39 @@ describe("AuroraDSQLUtil", () => {
     it("should throw error when host is missing", () => {
       const config = { user: "admin" };
 
-      expect(() => AuroraDSQLUtil.validatePgConfig(config as any)).toThrow("Host is required");
+      expect(() => AuroraDSQLUtil.parsePgConfig(config as any)).toThrow(
+        "Host is required"
+      );
     });
 
     it("should throw error when region cannot be determined", () => {
       const config = {
         host: "cluster123",
-        user: "admin"
+        user: "admin",
       };
 
-      expect(() => AuroraDSQLUtil.validatePgConfig(config)).toThrow("Region is not specified");
+      expect(() => AuroraDSQLUtil.parsePgConfig(config)).toThrow(
+        "Region is not specified"
+      );
     });
   });
 
   describe("buildHostnameFromIdAndRegion", () => {
     it("should build hostname from clusterId and region", () => {
-      const hostname = AuroraDSQLUtil.buildHostnameFromIdAndRegion("cluster123", "us-east-1");
+      const hostname = AuroraDSQLUtil.buildHostnameFromIdAndRegion(
+        "cluster123",
+        "us-east-1"
+      );
       expect(hostname).toBe("cluster123.dsql.us-east-1.on.aws");
     });
 
     it("should handle different regions", () => {
-      expect(AuroraDSQLUtil.buildHostnameFromIdAndRegion("abc", "eu-west-1")).toBe("abc.dsql.eu-west-1.on.aws");
-      expect(AuroraDSQLUtil.buildHostnameFromIdAndRegion("xyz", "ap-south-1")).toBe("xyz.dsql.ap-south-1.on.aws");
+      expect(
+        AuroraDSQLUtil.buildHostnameFromIdAndRegion("abc", "eu-west-1")
+      ).toBe("abc.dsql.eu-west-1.on.aws");
+      expect(
+        AuroraDSQLUtil.buildHostnameFromIdAndRegion("xyz", "ap-south-1")
+      ).toBe("xyz.dsql.ap-south-1.on.aws");
     });
   });
 });

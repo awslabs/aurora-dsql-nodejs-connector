@@ -14,12 +14,10 @@ class AuroraDSQLClient extends Client {
       throw new Error("Configuration is required");
     }
 
-    let dsqlConfig = AuroraDSQLUtil.validatePgConfig(config);
+    let dsqlConfig = AuroraDSQLUtil.parsePgConfig(config);
     super(dsqlConfig);
 
-    if (dsqlConfig !== undefined && typeof dsqlConfig !== "string") {
-      this.dsqlConfig = dsqlConfig;
-    }
+    this.dsqlConfig = dsqlConfig;
   }
 
   // TypeScript doesn't allow multiple declarations of the same function name hence the following declaration was used

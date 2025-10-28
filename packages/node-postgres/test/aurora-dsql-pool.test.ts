@@ -15,7 +15,7 @@ const mockAuroraDSQLUtil = AuroraDSQLUtil as jest.Mocked<typeof AuroraDSQLUtil>;
 describe("AuroraDSQLPool", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAuroraDSQLUtil.validatePgConfig.mockImplementation((config) => ({
+    mockAuroraDSQLUtil.parsePgConfig.mockImplementation((config) => ({
       host: "example.dsql.us-east-1.on.aws",
       user: "admin",
       port: 5432,
@@ -23,7 +23,7 @@ describe("AuroraDSQLPool", () => {
       region: "us-east-1",
       profile: "default",
       ssl: { rejectUnauthorized: true },
-      ...(typeof config === "string" ? {} : config)
+      ...(typeof config === "string" ? {} : config),
     }));
     mockAuroraDSQLUtil.getDSQLToken.mockResolvedValue("mock-pool-token-456");
   });
@@ -38,10 +38,10 @@ describe("AuroraDSQLPool", () => {
         host: "example.dsql.us-east-1.on.aws",
         user: "admin",
         max: 10,
-        min: 2
+        min: 2,
       };
 
-      mockAuroraDSQLUtil.validatePgConfig.mockReturnValueOnce({
+      mockAuroraDSQLUtil.parsePgConfig.mockReturnValueOnce({
         host: "example.dsql.us-east-1.on.aws",
         user: "admin",
         port: 5432,
@@ -50,12 +50,12 @@ describe("AuroraDSQLPool", () => {
         profile: "default",
         ssl: { rejectUnauthorized: true },
         max: 10,
-        min: 2
+        min: 2,
       });
 
       const pool = new AuroraDSQLPool(config);
 
-      expect(mockAuroraDSQLUtil.validatePgConfig).toHaveBeenCalledWith(config);
+      expect(mockAuroraDSQLUtil.parsePgConfig).toHaveBeenCalledWith(config);
       expect(mockPool).toHaveBeenCalledWith(
         expect.objectContaining({
           host: "example.dsql.us-east-1.on.aws",
@@ -66,7 +66,7 @@ describe("AuroraDSQLPool", () => {
           database: "postgres",
           region: "us-east-1",
           profile: "default",
-          ssl: { rejectUnauthorized: true }
+          ssl: { rejectUnauthorized: true },
         })
       );
       expect(pool).toBeInstanceOf(AuroraDSQLPool);
@@ -76,22 +76,22 @@ describe("AuroraDSQLPool", () => {
       const config = {
         host: "cluster123",
         user: "admin",
-        region: "us-west-2"
+        region: "us-west-2",
       };
 
-      mockAuroraDSQLUtil.validatePgConfig.mockReturnValueOnce({
+      mockAuroraDSQLUtil.parsePgConfig.mockReturnValueOnce({
         host: "cluster123.dsql.us-west-2.on.aws",
         user: "admin",
         port: 5432,
         database: "postgres",
         region: "us-west-2",
         profile: "default",
-        ssl: { rejectUnauthorized: true }
+        ssl: { rejectUnauthorized: true },
       });
 
       const pool = new AuroraDSQLPool(config);
 
-      expect(mockAuroraDSQLUtil.validatePgConfig).toHaveBeenCalledWith(config);
+      expect(mockAuroraDSQLUtil.parsePgConfig).toHaveBeenCalledWith(config);
       expect(pool).toBeInstanceOf(AuroraDSQLPool);
       expect(mockPool).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -100,21 +100,23 @@ describe("AuroraDSQLPool", () => {
           port: 5432,
           database: "postgres",
           region: "us-west-2",
-          profile: "default"
+          profile: "default",
         })
       );
     });
 
     it("should throw error from validatePgConfig when host is missing", () => {
-      mockAuroraDSQLUtil.validatePgConfig.mockImplementation(() => {
+      mockAuroraDSQLUtil.parsePgConfig.mockImplementation(() => {
         throw new Error("Host is required");
       });
 
-      expect(() => new AuroraDSQLPool({ user: "admin" } as any)).toThrow("Host is required");
+      expect(() => new AuroraDSQLPool({ user: "admin" } as any)).toThrow(
+        "Host is required"
+      );
     });
 
     it("should override defaults with user config", () => {
-      mockAuroraDSQLUtil.validatePgConfig.mockReturnValueOnce({
+      mockAuroraDSQLUtil.parsePgConfig.mockReturnValueOnce({
         host: "example.dsql.us-east-1.on.aws",
         user: "testuser",
         port: 3306,
@@ -123,7 +125,7 @@ describe("AuroraDSQLPool", () => {
         profile: "custom-profile",
         ssl: { rejectUnauthorized: true },
         max: 20,
-        idleTimeoutMillis: 30000
+        idleTimeoutMillis: 30000,
       });
 
       new AuroraDSQLPool({
@@ -133,7 +135,7 @@ describe("AuroraDSQLPool", () => {
         database: "mydb",
         profile: "custom-profile",
         max: 20,
-        idleTimeoutMillis: 30000
+        idleTimeoutMillis: 30000,
       });
 
       expect(mockPool).toHaveBeenCalledWith(
@@ -142,7 +144,7 @@ describe("AuroraDSQLPool", () => {
           database: "mydb",
           profile: "custom-profile",
           max: 20,
-          idleTimeoutMillis: 30000
+          idleTimeoutMillis: 30000,
         })
       );
     });
@@ -160,21 +162,27 @@ describe("AuroraDSQLPool", () => {
 
       pool = new AuroraDSQLPool({
         host: "example.dsql.us-east-1.on.aws",
-        user: "admin"
+        user: "admin",
       });
 
       // Mock pool options
       (pool as any).options = {
         host: "example.dsql.us-east-1.on.aws",
         user: "admin",
-        port: 5432
+        port: 5432,
       };
     });
 
     it("should generate token and connect successfully", async () => {
       const result = await pool.connect();
 
-      expect(mockAuroraDSQLUtil.getDSQLToken).toHaveBeenCalledWith("example.dsql.us-east-1.on.aws", "admin", "default", "us-east-1", undefined);
+      expect(mockAuroraDSQLUtil.getDSQLToken).toHaveBeenCalledWith(
+        "example.dsql.us-east-1.on.aws",
+        "admin",
+        "default",
+        "us-east-1",
+        undefined
+      );
       expect((pool as any).options.password).toBe("mock-pool-token-456");
       expect(mockConnect).toHaveBeenCalled();
       expect(result).toBe(mockClient);
@@ -217,30 +225,32 @@ describe("AuroraDSQLPool", () => {
       const tokenError = new Error("Pool token generation failed");
       mockAuroraDSQLUtil.getDSQLToken.mockRejectedValue(tokenError);
 
-      await expect(pool.connect()).rejects.toThrow("Pool token generation failed");
+      await expect(pool.connect()).rejects.toThrow(
+        "Pool token generation failed"
+      );
       expect(mockConnect).not.toHaveBeenCalled();
     });
 
     it("should use custom profile when provided", async () => {
-      mockAuroraDSQLUtil.validatePgConfig.mockReturnValueOnce({
+      mockAuroraDSQLUtil.parsePgConfig.mockReturnValueOnce({
         host: "example.dsql.us-east-1.on.aws",
         user: "admin",
         port: 5432,
         database: "postgres",
         region: "us-east-1",
         profile: "custom-profile",
-        ssl: { rejectUnauthorized: true }
+        ssl: { rejectUnauthorized: true },
       });
 
       const customPool = new AuroraDSQLPool({
         host: "example.dsql.us-east-1.on.aws",
         user: "admin",
-        profile: "custom-profile"
+        profile: "custom-profile",
       });
 
       (customPool as any).options = {
         host: "example.dsql.us-east-1.on.aws",
-        user: "admin"
+        user: "admin",
       };
 
       await customPool.connect();
@@ -255,33 +265,39 @@ describe("AuroraDSQLPool", () => {
     });
 
     it("should handle different regions", async () => {
-      mockAuroraDSQLUtil.validatePgConfig.mockReturnValueOnce({
+      mockAuroraDSQLUtil.parsePgConfig.mockReturnValueOnce({
         host: "cluster.dsql.eu-west-1.on.aws",
         user: "admin",
         port: 5432,
         database: "postgres",
         region: "eu-west-1",
         profile: "default",
-        ssl: { rejectUnauthorized: true }
+        ssl: { rejectUnauthorized: true },
       });
 
       const euPool = new AuroraDSQLPool({
         host: "cluster.dsql.eu-west-1.on.aws",
-        user: "admin"
+        user: "admin",
       });
 
       (euPool as any).options = {
         host: "cluster.dsql.eu-west-1.on.aws",
-        user: "admin"
+        user: "admin",
       };
 
       await euPool.connect();
 
-      expect(mockAuroraDSQLUtil.getDSQLToken).toHaveBeenCalledWith("cluster.dsql.eu-west-1.on.aws", "admin", "default", "eu-west-1", undefined);
+      expect(mockAuroraDSQLUtil.getDSQLToken).toHaveBeenCalledWith(
+        "cluster.dsql.eu-west-1.on.aws",
+        "admin",
+        "default",
+        "eu-west-1",
+        undefined
+      );
     });
 
     it("should pass tokenDurationSecs to getDSQLToken", async () => {
-      mockAuroraDSQLUtil.validatePgConfig.mockReturnValueOnce({
+      mockAuroraDSQLUtil.parsePgConfig.mockReturnValueOnce({
         host: "example.dsql.us-east-1.on.aws",
         user: "admin",
         port: 5432,
@@ -289,38 +305,46 @@ describe("AuroraDSQLPool", () => {
         region: "us-east-1",
         profile: "default",
         ssl: { rejectUnauthorized: true },
-        tokenDurationSecs: 1800
+        tokenDurationSecs: 1800,
       });
 
       const poolWithDuration = new AuroraDSQLPool({
         host: "example.dsql.us-east-1.on.aws",
         user: "admin",
-        tokenDurationSecs: 1800
+        tokenDurationSecs: 1800,
       });
 
       (poolWithDuration as any).options = {
         host: "example.dsql.us-east-1.on.aws",
-        user: "admin"
+        user: "admin",
       };
 
       await poolWithDuration.connect();
 
-      expect(mockAuroraDSQLUtil.getDSQLToken).toHaveBeenCalledWith("example.dsql.us-east-1.on.aws", "admin", "default", "us-east-1", 1800);
+      expect(mockAuroraDSQLUtil.getDSQLToken).toHaveBeenCalledWith(
+        "example.dsql.us-east-1.on.aws",
+        "admin",
+        "default",
+        "us-east-1",
+        1800
+      );
     });
 
     it("should throw error when options is undefined", async () => {
       Object.defineProperty(pool, "options", {
         value: undefined,
         writable: true,
-        configurable: true
+        configurable: true,
       });
 
-      await expect(pool.connect()).rejects.toThrow("options is undefined in this pool");
+      await expect(pool.connect()).rejects.toThrow(
+        "options is undefined in this pool"
+      );
       expect(mockConnect).not.toHaveBeenCalled();
     });
 
     it("should handle pool-specific options", async () => {
-      mockAuroraDSQLUtil.validatePgConfig.mockReturnValueOnce({
+      mockAuroraDSQLUtil.parsePgConfig.mockReturnValueOnce({
         host: "example.dsql.us-east-1.on.aws",
         user: "admin",
         port: 5432,
@@ -330,7 +354,7 @@ describe("AuroraDSQLPool", () => {
         ssl: { rejectUnauthorized: true },
         max: 15,
         min: 3,
-        idleTimeoutMillis: 20000
+        idleTimeoutMillis: 20000,
       });
 
       const poolWithOptions = new AuroraDSQLPool({
@@ -338,12 +362,12 @@ describe("AuroraDSQLPool", () => {
         user: "admin",
         max: 15,
         min: 3,
-        idleTimeoutMillis: 20000
+        idleTimeoutMillis: 20000,
       });
 
       (poolWithOptions as any).options = {
         host: "example.dsql.us-east-1.on.aws",
-        user: "admin"
+        user: "admin",
       };
 
       await poolWithOptions.connect();
@@ -356,7 +380,7 @@ describe("AuroraDSQLPool", () => {
           profile: "default",
           max: 15,
           min: 3,
-          idleTimeoutMillis: 20000
+          idleTimeoutMillis: 20000,
         })
       );
     });
