@@ -1,6 +1,11 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import pg from "pg";
 import assert from "node:assert";
-import { AuroraDSQLClient } from "../../src/aurora-dsql-client";
+import { AuroraDSQLClient } from "@aws/aurora-dsql-node-postgres-connector";
 
 const { Client } = pg;
 
