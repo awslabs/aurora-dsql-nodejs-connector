@@ -13,6 +13,7 @@ const DEFAULT_EXPIRY = 30; // Based on default Postgres.js connect_timeout
 const PRE_REGION_HOST_PATTERN = ".dsql.";
 const POST_REGION_HOST_PATTERN = ".on.aws";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function auroraDSQLPostgres<T extends Record<string, postgres.PostgresType> = {}>(
     url: string,
     options?: AuroraDSQLConfig<T>
@@ -41,12 +42,12 @@ export function auroraDSQLPostgres<T extends Record<string, postgres.PostgresTyp
         parse: (raw: any) => infer R
     } ? R : never
 }> {
-
+/* eslint-enable @typescript-eslint/no-explicit-any */
     let opts: AuroraDSQLConfig<T>;
     let host: string;
     let username: string;
     let database: string | undefined;
-    let ssl: any | undefined; // Using 'any' type because we only care to see if any SSL option has been given.
+    let ssl: object | boolean | string | undefined;
     if (typeof urlOrOptions === 'string') {
         // Called with (url, options)
         let parsedOptions = parseConnectionString(urlOrOptions);
@@ -81,10 +82,13 @@ export function auroraDSQLPostgres<T extends Record<string, postgres.PostgresTyp
         signerConfig.credentials = opts.customCredentialsProvider;
     }
     let signer = new DsqlSigner(signerConfig);
-    opts.password = () => getToken(signer, username);
     if (!database) opts.database = DEFAULT_DATABASE;
     if (!ssl) opts.ssl = true;
-    return typeof urlOrOptions === 'string' ? postgres(urlOrOptions, opts) : postgres(opts);
+    const postgresOpts: postgres.Options<T> = {
+        ...opts,
+        password: () => getToken(signer, username),
+    };
+    return typeof urlOrOptions === 'string' ? postgres(urlOrOptions, postgresOpts) : postgres(postgresOpts);
 }
 
 function parseConnectionString(url: string): {
@@ -137,7 +141,7 @@ async function getToken(signer: DsqlSigner, username: string): Promise<string> {
     }
 }
 
-export interface AuroraDSQLConfig<T extends Record<string, PostgresType<T>>> extends postgres.Options<T> {
+export interface AuroraDSQLConfig<T extends Record<string, PostgresType<T>>> extends Omit<postgres.Options<T>, 'password' | 'pass'> {
 
     region?: string;
 

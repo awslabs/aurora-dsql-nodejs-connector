@@ -19,7 +19,6 @@ async function verifySuccessfulConnection(sql: postgres.Sql<Record<string, postg
 describe('DSQL Integration Tests', () => {
     const clusterEndpoint = process.env.CLUSTER_ENDPOINT;
     const region = process.env.REGION;
-    const iamRole = process.env.IAM_ROLE;
 
     test('should connect to DSQL cluster', async () => {
         const sql = auroraDSQLPostgres({
@@ -121,16 +120,8 @@ describe('DSQL Integration Tests', () => {
         }
     });
 
-    // TODO: Test is failing in CI, passing locally
-    test.skip('should connect with non-admin user', async () => {
+    test('should connect with non-admin user', async () => {
         let username = 'testuser';
-        const adminSql = auroraDSQLPostgres({
-            host: clusterEndpoint,
-            database: 'postgres',
-            username: 'admin',
-            region: region,
-        });
-
         const nonAdminSql = auroraDSQLPostgres({
             host: clusterEndpoint,
             database: 'postgres',
@@ -139,19 +130,10 @@ describe('DSQL Integration Tests', () => {
         });
 
         try {
-            await adminSql.unsafe(`CREATE ROLE ${username} WITH LOGIN`);
-            await adminSql.unsafe(`AWS IAM GRANT ${username} TO '${iamRole}'`);
-
             const result = await nonAdminSql`SELECT current_user as username`;
             expect(result[0].username).toBe(username);
         } finally {
             await nonAdminSql.end();
-            try {
-                await adminSql.unsafe(`AWS IAM REVOKE ${username} FROM '${iamRole}'`);
-                await adminSql.unsafe(`DROP ROLE ${username}`);
-            } finally {
-                await adminSql.end();
-            }
         }
     });
 
