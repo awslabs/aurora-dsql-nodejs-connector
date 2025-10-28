@@ -19,7 +19,6 @@ async function verifySuccessfulConnection(sql: postgres.Sql<Record<string, postg
 describe('DSQL Integration Tests', () => {
     const clusterEndpoint = process.env.CLUSTER_ENDPOINT;
     const region = process.env.REGION;
-    const iamRole = process.env.IAM_ROLE;
 
     test('should connect to DSQL cluster', async () => {
         const sql = auroraDSQLPostgres({
