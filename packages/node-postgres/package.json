@@ -16,7 +16,7 @@
 
   "dependencies": {
     "@aws-sdk/credential-providers": "^3.894.0",
-    "@aws-sdk/dsql-signer": "^3.917.0"
+    "@aws-sdk/dsql-signer": "^3.918.0"
   },
   "peerDependencies": {
     "pg": "^8.16.3"
