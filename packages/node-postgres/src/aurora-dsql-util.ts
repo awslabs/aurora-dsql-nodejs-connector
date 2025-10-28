@@ -4,7 +4,10 @@
  */
 import { DsqlSigner } from "@aws-sdk/dsql-signer";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
-import { AwsCredentialIdentity, AwsCredentialIdentityProvider } from "@smithy/types";
+import {
+  AwsCredentialIdentity,
+  AwsCredentialIdentityProvider,
+} from "@smithy/types";
 import { AuroraDSQLConfig } from "./config/aurora-dsql-config";
 import { AuroraDSQLPoolConfig } from "./config/aurora-dsql-pool-config";
 import { parse } from "pg-connection-string";
@@ -33,7 +36,9 @@ export class AuroraDSQLUtil {
     profile: string,
     region: string,
     tokenDurationSecs?: number,
-    customCredentialsProvider?: AwsCredentialIdentity | AwsCredentialIdentityProvider
+    customCredentialsProvider?:
+      | AwsCredentialIdentity
+      | AwsCredentialIdentityProvider
   ): Promise<string> {
     let token: string;
     try {
@@ -49,7 +54,7 @@ export class AuroraDSQLUtil {
         hostname: host,
         credentials: credential,
         region: region,
-        expiresIn: tokenDurationSecs
+        expiresIn: tokenDurationSecs,
       });
 
       if (user === ADMIN_USER) {
@@ -67,8 +72,10 @@ export class AuroraDSQLUtil {
     return token;
   }
 
-  public static validatePgConfig(config: string | AuroraDSQLConfig | AuroraDSQLPoolConfig): AuroraDSQLConfig | AuroraDSQLPoolConfig {
-    let dsqlConfig: AuroraDSQLConfig;
+  public static parsePgConfig(
+    config: string | AuroraDSQLConfig | AuroraDSQLPoolConfig
+  ): AuroraDSQLConfig | AuroraDSQLPoolConfig {
+    let dsqlConfig: AuroraDSQLConfig | AuroraDSQLPoolConfig;
     if (typeof config === "string") {
       dsqlConfig = parse(config) as AuroraDSQLConfig;
     } else {
@@ -84,11 +91,17 @@ export class AuroraDSQLUtil {
       dsqlConfig.region = AuroraDSQLUtil.parseRegion(dsqlConfig.host);
     } catch {
       //clusterId is specified in the host name
-      dsqlConfig.region = dsqlConfig.region || process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION;
+      dsqlConfig.region =
+        dsqlConfig.region ||
+        process.env.AWS_REGION ||
+        process.env.AWS_DEFAULT_REGION;
       if (dsqlConfig.region === undefined) {
         throw new Error("Region is not specified");
       }
-      dsqlConfig.host = AuroraDSQLUtil.buildHostnameFromIdAndRegion(dsqlConfig.host!, dsqlConfig.region);
+      dsqlConfig.host = AuroraDSQLUtil.buildHostnameFromIdAndRegion(
+        dsqlConfig.host!,
+        dsqlConfig.region
+      );
     }
 
     dsqlConfig = {
@@ -96,12 +109,19 @@ export class AuroraDSQLUtil {
       port: 5432,
       database: "postgres",
       ssl: { rejectUnauthorized: true },
-      ...dsqlConfig
+      idleTimeoutMillis: 600000, // 10 min
+      maxLifetimeSeconds: 3300, // 55 min
+      ...dsqlConfig,
     };
     return dsqlConfig;
   }
 
-  public static buildHostnameFromIdAndRegion(clusterId: string, region: string | undefined) {
-    return clusterId + PRE_REGION_HOST_PATTERN + region + POST_REGION_HOST_PATTERN;
+  public static buildHostnameFromIdAndRegion(
+    clusterId: string,
+    region: string | undefined
+  ) {
+    return (
+      clusterId + PRE_REGION_HOST_PATTERN + region + POST_REGION_HOST_PATTERN
+    );
   }
 }

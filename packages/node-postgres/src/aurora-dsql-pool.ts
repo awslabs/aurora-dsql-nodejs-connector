@@ -14,21 +14,29 @@ class AuroraDSQLPool extends Pool {
       throw new Error("Configuration is required");
     }
 
-    let dsqlConfig = AuroraDSQLUtil.validatePgConfig(config);
+    let dsqlConfig = AuroraDSQLUtil.parsePgConfig(config);
     super(dsqlConfig);
 
-    if (dsqlConfig !== undefined && typeof dsqlConfig !== "string") {
-      this.dsqlConfig = dsqlConfig;
-    }
+    this.dsqlConfig = dsqlConfig;
   }
 
   // These declaration are needed as they have different returns otherwise a compile error will occur
   connect(): Promise<PoolClient>;
-  connect(callback: (err: Error | undefined, client: PoolClient | undefined, done: (release?: any) => void) => void): void;
+  connect(
+    callback: (
+      err: Error | undefined,
+      client: PoolClient | undefined,
+      done: (release?: any) => void
+    ) => void
+  ): void;
 
   // TypeScript doesn't allow multiple declaration of the same name hence the following declaration was used
   override async connect(
-    callback?: (err: Error | undefined, client: PoolClient | undefined, done: (release?: any) => void) => void
+    callback?: (
+      err: Error | undefined,
+      client: PoolClient | undefined,
+      done: (release?: any) => void
+    ) => void
   ): Promise<PoolClient | void> {
     try {
       if (this.options !== undefined && this.dsqlConfig !== undefined) {
