@@ -1,5 +1,7 @@
 name: Publish Aurora DSQL Connector for Postgres.js
-
+permissions:
+  contents: read
+  id-token: write
 on:
   release:
     types: [published]
@@ -27,7 +29,7 @@ jobs:
           npm run build
         working-directory: packages/postgres-js
       
-      - run: npm publish
+      - run: npm publish --provenance
         working-directory: packages/postgres-js
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
