@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "assert": "2.1.0",
-    "dsql-postgresjs-connector": "^1.0.0",
+    "@aws/aurora-dsql-postgresjs-connector": "^0.1.0",
     "postgres": "^3.4.5",
     "uuid": "^11.0.2"
   },
