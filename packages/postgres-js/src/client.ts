@@ -86,7 +86,7 @@ export function auroraDSQLPostgres<T extends Record<string, postgres.PostgresTyp
     if (!ssl) opts.ssl = true;
     const postgresOpts: postgres.Options<T> = {
         ...opts,
-        password: () => getToken(signer, username),
+        pass: () => getToken(signer, username),
     };
     return typeof urlOrOptions === 'string' ? postgres(urlOrOptions, postgresOpts) : postgres(postgresOpts);
 }
