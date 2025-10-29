@@ -57,11 +57,11 @@ describe('AuroraDSQLPostgres', () => {
             expect(mockPostgres).toHaveBeenCalledTimes(1);
             const [url, options] = mockPostgres.mock.calls[0];
             expect(url).toBe('postgres://admin@cluster.dsql.us-east-1.on.aws/postgres');
-            expect(typeof options.password).toBe('function');
+            expect(typeof options.pass).toBe('function');
             expect(mockDsqlSigner).toHaveBeenCalledTimes(1);
             const signerConfig = mockDsqlSigner.mock.calls[0][0];
             expect(signerConfig.hostname).toBe('cluster.dsql.us-east-1.on.aws');
-            const token = await options.password();
+            const token = await options.pass();
             expect(token).toBe('admin-token');
         });
 
@@ -166,7 +166,7 @@ describe('AuroraDSQLPostgres', () => {
             });
 
             const options = mockPostgres.mock.calls[0][0];
-            const token = await options.password();
+            const token = await options.pass();
 
             expect(token).toBe('admin-token');
         });
@@ -179,7 +179,7 @@ describe('AuroraDSQLPostgres', () => {
             });
 
             const options = mockPostgres.mock.calls[0][0];
-            const token = await options.password();
+            const token = await options.pass();
 
             expect(token).toBe('user-token');
         });
