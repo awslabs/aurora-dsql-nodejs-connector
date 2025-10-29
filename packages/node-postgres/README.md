@@ -51,7 +51,7 @@ npm install --save-dev @types/pg
 
 ```typescript
 // src/index.ts
-import { AuroraDSQLClient } from "aurora-dsql-node-postgres-connector";
+import { AuroraDSQLClient } from "@aws/aurora-dsql-node-postgres-connector";
 
 const client = new AuroraDSQLClient({
   host: "<CLUSTER_ENDPOINT>",
@@ -66,7 +66,7 @@ await client.end();
 
 ```typescript
 // src/index.ts
-import { AuroraDSQLPool } from "aurora-dsql-node-postgres-connector";
+import { AuroraDSQLPool } from "@aws/aurora-dsql-node-postgres-connector";
 
 const pool = new AuroraDSQLPool({
   host: "<CLUSTER_ENDPOINT>",
@@ -84,7 +84,7 @@ const result = await pool.query("SELECT NOW()");
 ```typescript
 // index.ts
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
-import { AuroraDSQLClient } from "aurora-dsql-node-postgres-connector";
+import { AuroraDSQLClient } from "@aws/aurora-dsql-node-postgres-connector";
 
 const client = new AuroraDSQLClient({
   host: "example.dsql.us-east-1.on.aws",
@@ -113,16 +113,19 @@ await client.end();
 All other parameters from [Client](https://node-postgres.com/apis/client) / [Pool](https://node-postgres.com/apis/pool) are supported.
 
 ## Authentication
+
 The connector automatically handles DSQL authentication by generating tokens using the DSQL client token generator. If the AWS region is not provided, it will be automatically parsed from the hostname provided.
 
 For more information on authentication in Aurora DSQL, see the [user guide](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/authentication-authorization.html).
 
 ### Admin vs Regular Users
+
 - Users named "admin" automatically use admin authentication tokens
 - All other users use regular authentication tokens
 - Tokens are generated dynamically for each connection
 
 ## Development
+
 ```
 # Install dependencies
 npm install
