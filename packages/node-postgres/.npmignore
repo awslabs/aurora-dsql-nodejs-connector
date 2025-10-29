@@ -1,5 +1,6 @@
 src/
-tests/
+test/
+example/
 *.test.js
 *.test.ts
 .github/
