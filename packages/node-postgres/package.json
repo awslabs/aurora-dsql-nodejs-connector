@@ -1,10 +1,17 @@
 {
   "name": "@aws/aurora-dsql-node-postgres-connector",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "An AWS Aurora DSQL connector with IAM authentication for node-postgres",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/awslabs/aurora-dsql-nodejs-connector"
+  },
+  "homepage": "https://github.com/awslabs/aurora-dsql-nodejs-connector",
+  "keywords": ["aws", "aurora", "dsql", "postgres", "database", "iam", "authentication"],
   "type": "module",
-  "main": "src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "jest",
@@ -13,7 +20,10 @@
     "lint": "eslint src/ test/",
     "lint:fix": "eslint src/ test/ --fix"
   },
-
+  "files": [
+    "dist/",
+    "README.md"
+  ],
   "dependencies": {
     "@aws-sdk/credential-providers": "^3.894.0",
     "@aws-sdk/dsql-signer": "^3.917.0"

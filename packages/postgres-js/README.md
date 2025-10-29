@@ -127,6 +127,10 @@ For more information on authentication in Aurora DSQL, see the [user guide](http
 - All other users use regular authentication tokens
 - Tokens are generated dynamically for each connection
 
+## Sample usage
+
+An JavaScript example using the Aurora DSQL Connector for Postgres.js is available [here](example).
+
 ## Development
 
 ```bash
