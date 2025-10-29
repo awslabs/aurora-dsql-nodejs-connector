@@ -38,7 +38,7 @@ Postgres.js directly.
 ### Installation
 
 ```bash
-npm install @aws/aurora-dsql-postgres-connector
+npm install @aws/aurora-dsql-postgresjs-connector
 # Postgres.js is a peer-dependency, so users must install it themselves
 npm install postgres
 ```
@@ -46,7 +46,7 @@ npm install postgres
 ### Basic Usage
 
 ```typescript
-import { auroraDSQLPostgres } from '@aws/aurora-dsql-postgres-connector';
+import { auroraDSQLPostgres } from '@aws/aurora-dsql-postgresjs-connector';
 
 const sql = auroraDSQLPostgres({
   host: 'your-cluster.dsql.us-east-1.on.aws',
