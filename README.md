@@ -12,7 +12,7 @@ Built on [node-postgres](https://node-postgres.com/), the most popular PostgreSQ
 
 [View Documentation](./packages/node-postgres/README.md)
 
-[Sample Usage](./packages/node-postgres/example)
+[Sample Usage](./packages/node-postgres/example/)
 
 ### [Aurora DSQL Connector for Postgres.js](./packages/postgres-js/)
 
@@ -20,7 +20,7 @@ Built on [Postgres.js](https://github.com/porsager/postgres), a fast and modern 
 
 [View Documentation](./packages/postgres-js/README.md)
 
-[Sample Usage](./packages/postgres-js/example)
+[Sample Usage](./packages/postgres-js/example/)
 
 ## Key Features
 
