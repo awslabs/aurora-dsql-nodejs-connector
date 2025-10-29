@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import {auroraDSQLPostgres} from "dsql-postgresjs-connector";
+import {auroraDSQLPostgres} from "@aws/aurora-dsql-postgresjs-connector";
 
 const ADMIN = "admin";
 const PUBLIC = "public";
