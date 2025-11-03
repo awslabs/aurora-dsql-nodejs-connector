@@ -14,7 +14,6 @@ const mockFromNodeProviderChain = fromNodeProviderChain as jest.MockedFunction<
   typeof fromNodeProviderChain
 >;
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 describe("AuroraDSQLUtil", () => {
   beforeEach(() => {
     jest.clearAllMocks();
