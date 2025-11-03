@@ -12,6 +12,7 @@ jest.mock("../src/aurora-dsql-util");
 const mockClient = Client as jest.MockedClass<typeof Client>;
 const mockAuroraDSQLUtil = AuroraDSQLUtil as jest.Mocked<typeof AuroraDSQLUtil>;
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 describe("AuroraDSQLClient", () => {
   beforeEach(() => {
     jest.clearAllMocks();

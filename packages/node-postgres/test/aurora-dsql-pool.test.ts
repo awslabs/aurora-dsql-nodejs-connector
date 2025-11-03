@@ -11,7 +11,7 @@ jest.mock("../src/aurora-dsql-util");
 
 const mockPool = Pool as jest.MockedClass<typeof Pool>;
 const mockAuroraDSQLUtil = AuroraDSQLUtil as jest.Mocked<typeof AuroraDSQLUtil>;
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 describe("AuroraDSQLPool", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -110,7 +110,7 @@ describe("AuroraDSQLPool", () => {
         throw new Error("Host is required");
       });
 
-      expect(() => new AuroraDSQLPool({ user: "admin" } as any)).toThrow(
+      expect(() => new AuroraDSQLPool({ user: "admin" })).toThrow(
         "Host is required"
       );
     });
