@@ -2,8 +2,9 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import {auroraDSQLPostgres} from '../../src/client';
+import { auroraDSQLPostgres, auroraDSQLWsPostgres } from '../../src/client';
 import postgres from "postgres";
+import { jest } from '@jest/globals';
 
 jest.setTimeout(30000);
 
@@ -16,7 +17,7 @@ async function verifySuccessfulConnection(sql: postgres.Sql<Record<string, postg
     }
 }
 
-describe('DSQL Integration Tests', () => {
+describe('auroraDSQLPostgres DSQL Integration Tests', () => {
     const clusterEndpoint = process.env.CLUSTER_ENDPOINT;
     const region = process.env.REGION;
 
@@ -82,7 +83,7 @@ describe('DSQL Integration Tests', () => {
             database: 'postgres',
             username: 'admin',
             region: region,
-            ssl: {rejectUnauthorized: false}
+            ssl: { rejectUnauthorized: false }
         });
 
         try {
@@ -148,7 +149,7 @@ describe('DSQL Integration Tests', () => {
 
     test('should handle clusterID as host', async () => {
         const clusterID = clusterEndpoint!.split(".")[0];
-        const sql = auroraDSQLPostgres( {
+        const sql = auroraDSQLPostgres({
             host: clusterID,
             region: region,
             user: "admin"
@@ -162,8 +163,164 @@ describe('DSQL Integration Tests', () => {
 
         const sql = auroraDSQLPostgres(connectionString, {
             user: "admin",
+            region: region,
+            port: 5432
+        });
+        await verifySuccessfulConnection(sql);
+    });
+});
+
+describe('auroraDSQLWsPostgres DSQL Integration Tests', () => {
+    const clusterEndpoint = process.env.CLUSTER_ENDPOINT;
+    const region = process.env.REGION;
+
+    // Testing auroraDSQLWsPostgres 
+
+    test('should connect to DSQL cluster', async () => {
+        const sql = auroraDSQLWsPostgres({
+            host: clusterEndpoint,
+            database: 'postgres',
+            username: 'admin',
+            region: region,
+            port: 443
+        });
+        await verifySuccessfulConnection(sql);
+    });
+
+    test('should connect without providing region', async () => {
+        const sql = auroraDSQLWsPostgres({
+            host: clusterEndpoint,
+            database: 'postgres',
+            username: 'admin',
+            port: 443
+        });
+        await verifySuccessfulConnection(sql);
+    });
+
+    test('should connect without providing database', async () => {
+        const sql = auroraDSQLWsPostgres({
+            host: clusterEndpoint,
+            username: 'admin',
+            region: region,
+            port: 443
+        });
+        await verifySuccessfulConnection(sql);
+    });
+
+    test('should connect with minimum parameters', async () => {
+        const sql = auroraDSQLWsPostgres({
+            host: clusterEndpoint,
+            username: 'admin',
+        });
+        await verifySuccessfulConnection(sql);
+    });
+
+    test('should execute basic query', async () => {
+        const sql = auroraDSQLWsPostgres({
+            host: clusterEndpoint,
+            database: 'postgres',
+            username: 'admin',
+            region: region,
+        });
+        await verifySuccessfulConnection(sql);
+    });
+
+    test('should handle connection string format', async () => {
+        const connectionString = `postgres://admin@${clusterEndpoint}`;
+
+        const sql = auroraDSQLWsPostgres(connectionString);
+        await verifySuccessfulConnection(sql);
+    });
+
+    test('should handle parameterized queries', async () => {
+        const sql = auroraDSQLWsPostgres({
+            host: clusterEndpoint,
+            database: 'postgres',
+            username: 'admin',
+            region: region
+        });
+
+        try {
+            const testValue = 42;
+            const result = await sql`SELECT ${testValue} as param_value`;
+            expect(result[0].param_value).toBe("42");
+        } finally {
+            await sql.end();
+        }
+    });
+
+    test('should handle connection pool with concurrent queries', async () => {
+        const sql = auroraDSQLWsPostgres({
+            host: clusterEndpoint,
+            database: 'postgres',
+            username: 'admin',
+            region: region,
+            max: 3
+        });
+
+        try {
+            const promises = [
+                sql`SELECT 1 as value`,
+                sql`SELECT 2 as value`,
+                sql`SELECT 3 as value`
+            ];
+
+            const results = await Promise.all(promises);
+
+            expect(results[0][0].value).toBe(1);
+            expect(results[1][0].value).toBe(2);
+            expect(results[2][0].value).toBe(3);
+        } finally {
+            await sql.end();
+        }
+    });
+
+    test('should connect with non-admin user', async () => {
+        let username = 'testuser';
+        const nonAdminSql = auroraDSQLWsPostgres({
+            host: clusterEndpoint,
+            database: 'postgres',
+            username: username,
+            region: region,
+        });
+
+        try {
+            const result = await nonAdminSql`SELECT current_user as username`;
+            expect(result[0].username).toBe(username);
+        } finally {
+            await nonAdminSql.end();
+        }
+    });
+
+    test('should handle url with username in options', async () => {
+        const connectionString = `postgres://${clusterEndpoint}`;
+
+        const sql = auroraDSQLWsPostgres(connectionString, {
+            user: "admin"
+        });
+        await verifySuccessfulConnection(sql);
+    });
+
+    test('should handle clusterID as host', async () => {
+        const clusterID = clusterEndpoint!.split(".")[0];
+        const sql = auroraDSQLWsPostgres({
+            host: clusterID,
+            region: region,
+            user: "admin"
+        });
+        await verifySuccessfulConnection(sql);
+    });
+
+    test('should handle clusterID as host in connection string', async () => {
+        const clusterID = clusterEndpoint!.split(".")[0];
+        const connectionString = `postgres://${clusterID}`;
+
+        const sql = auroraDSQLWsPostgres(connectionString, {
+            user: "admin",
             region: region
         });
         await verifySuccessfulConnection(sql);
     });
+
+
 });

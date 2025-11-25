@@ -8,7 +8,15 @@
     "url": "https://github.com/awslabs/aurora-dsql-nodejs-connector"
   },
   "homepage": "https://github.com/awslabs/aurora-dsql-nodejs-connector",
-  "keywords": ["aws", "aurora", "dsql", "postgres", "database", "iam", "authentication"],
+  "keywords": [
+    "aws",
+    "aurora",
+    "dsql",
+    "postgres",
+    "database",
+    "iam",
+    "authentication"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -32,7 +40,8 @@
   ],
   "dependencies": {
     "@aws-sdk/credential-providers": "^3.901.0",
-    "@aws-sdk/dsql-signer": "^3.920.0"
+    "@aws-sdk/dsql-signer": "^3.920.0",
+    "async-mutex": "^0.5.0"
   },
   "peerDependencies": {
     "postgres": "^3.4.7"
