@@ -128,8 +128,8 @@ export class PostgresWs extends EventEmitter {
     };
 
     this.ws.onerror = (event: Event) => {
-
-      this.emit("error", new Error("WebSocket error"));
+      const msg = (event as ErrorEvent).message || "WebSocket error";
+      this.emit("error", new Error(`${msg} ${this.host}:${this.port}`));
     };
 
     this.ws.onclose = () => {
