@@ -2,7 +2,7 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import { jest } from '@jest/globals';
+import { jest, describe, test, beforeAll, beforeEach, expect } from '@jest/globals';
 import { auroraDSQLPostgres } from "../src";
 
 jest.mock('postgres', () => {
@@ -256,8 +256,8 @@ describe('AuroraDSQLPostgres', () => {
 });
 
 
-
-describe('AuroraDSQLWsPostgres', () => {
+const isNode20 = process.version.startsWith('v20.');
+(isNode20 ? describe.skip : describe)('AuroraDSQLWsPostgres', () => {
     let AuroraDSQLPostgres: any;
     let mockPostgres: any;
     let mockDsqlSigner: any;

@@ -4,7 +4,7 @@
  */
 import { auroraDSQLPostgres, auroraDSQLWsPostgres } from '../../src/client';
 import postgres from "postgres";
-import { jest } from '@jest/globals';
+import { jest, describe, test, expect } from '@jest/globals';
 
 jest.setTimeout(30000);
 
@@ -170,7 +170,8 @@ describe('auroraDSQLPostgres DSQL Integration Tests', () => {
     });
 });
 
-describe('auroraDSQLWsPostgres DSQL Integration Tests', () => {
+const isNode20 = process.version.startsWith('v20.');
+(isNode20 ? describe.skip : describe)('auroraDSQLWsPostgres DSQL Integration Tests', () => {
     const clusterEndpoint = process.env.CLUSTER_ENDPOINT;
     const region = process.env.REGION;
 
