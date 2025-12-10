@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/.bin/jest --testPathPattern='test/smoke.test.ts' --runInBand --detectOpenHandles --forceExit"
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --testPathPatterns='test/smoke.test.ts' --runInBand --detectOpenHandles --forceExit"
   },
   "author": "",
   "license": "Apache-2.0",
@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "jest": "^29.7.0",
+    "jest": "^30.2.0",
     "ts-jest": "^29.4.6",
     "typescript": "^5.9.3"
   }
