@@ -6,7 +6,17 @@ updates:
       interval: "daily"
     open-pull-requests-limit: 5
   - package-ecosystem: "npm"
+    directory: "/packages/node-postgres/example"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 5
+  - package-ecosystem: "npm"
     directory: "/packages/postgres-js"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 5
+  - package-ecosystem: "npm"
+    directory: "/packages/postgres-js/example"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 5
