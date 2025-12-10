@@ -24,7 +24,7 @@
     }
   },
   "scripts": {
-    "clean": "rm -r dist/ node_modules/",
+    "clean": "rm -rf dist/ node_modules/",
     "build": "npm run build:dev",
     "build:dev": "npm run typecheck && tsdown \"src/**/*.ts\" --format cjs,esm --dts --sourcemap",
     "build:prod": "npm run typecheck && tsdown src/index.ts --format cjs,esm --dts",
