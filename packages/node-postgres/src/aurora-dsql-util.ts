@@ -78,6 +78,9 @@ export class AuroraDSQLUtil {
     let dsqlConfig: AuroraDSQLConfig | AuroraDSQLPoolConfig;
     if (typeof config === "string") {
       dsqlConfig = parse(config) as AuroraDSQLConfig;
+    } else if (config.connectionString) {
+      // parse the connectionString 
+      dsqlConfig = Object.assign({}, config, parse(config.connectionString));
     } else {
       dsqlConfig = config;
     }
@@ -88,7 +91,9 @@ export class AuroraDSQLUtil {
 
     // check if host is a clusterId or cluster endpoint
     try {
-      dsqlConfig.region = AuroraDSQLUtil.parseRegion(dsqlConfig.host);
+      if (!dsqlConfig.region) {
+        dsqlConfig.region = AuroraDSQLUtil.parseRegion(dsqlConfig.host);
+      }
     } catch {
       //clusterId is specified in the host name
       dsqlConfig.region =
