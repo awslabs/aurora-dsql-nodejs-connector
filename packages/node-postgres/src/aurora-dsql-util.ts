@@ -10,11 +10,25 @@ import {
 } from "@smithy/types";
 import { AuroraDSQLConfig } from "./config/aurora-dsql-config.js";
 import { AuroraDSQLPoolConfig } from "./config/aurora-dsql-pool-config.js";
-import { parse } from "pg-connection-string";
+import { parse, ConnectionOptions } from "pg-connection-string";
 
 const ADMIN_USER = "admin";
 const PRE_REGION_HOST_PATTERN = ".dsql.";
 const POST_REGION_HOST_PATTERN = ".on.aws";
+
+/**
+ * Parse the provided connection string into an equivalent object.
+ */
+function parseConnectionString(connectionString: string): ConnectionOptions {
+  const parsed = parse(connectionString);
+
+  // Upstream parsing uses falsey values for unset configuration. We remove keys
+  // here to make it easier to work with the result.
+  for (const key of Object.keys(parsed)) {
+    if (!parsed[key]) delete parsed[key];
+  }
+  return parsed;
+}
 
 export class AuroraDSQLUtil {
   public static parseRegion(host: string): string {
@@ -77,10 +91,10 @@ export class AuroraDSQLUtil {
   ): AuroraDSQLConfig | AuroraDSQLPoolConfig {
     let dsqlConfig: AuroraDSQLConfig | AuroraDSQLPoolConfig;
     if (typeof config === "string") {
-      dsqlConfig = parse(config) as AuroraDSQLConfig;
+      dsqlConfig = parseConnectionString(config) as AuroraDSQLConfig;
     } else if (config.connectionString) {
       // Connection string properties override as set by upstream library.
-      dsqlConfig = Object.assign({}, config, parse(config.connectionString));
+      dsqlConfig = Object.assign({}, config, parseConnectionString(config.connectionString));
     } else {
       dsqlConfig = config;
     }

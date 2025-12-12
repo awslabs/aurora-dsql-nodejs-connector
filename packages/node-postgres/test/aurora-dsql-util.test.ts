@@ -224,6 +224,16 @@ describe("AuroraDSQLUtil", () => {
       expect(result.region).toBe("us-east-1");
     });
 
+    it("should apply defaults when connection string has empty port and null database", () => {
+      const connectionString = "postgresql://cluster.dsql.us-east-1.on.aws";
+
+      const result = AuroraDSQLUtil.parsePgConfig(connectionString);
+
+      expect(result.user).toBe("admin");
+      expect(result.port).toBe(5432);
+      expect(result.database).toBe("postgres");
+    });
+
     it("should build hostname from clusterId and region from config", () => {
       const config = {
         host: "cluster123",
