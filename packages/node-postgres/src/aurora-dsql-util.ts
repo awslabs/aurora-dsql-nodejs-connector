@@ -95,6 +95,7 @@ export class AuroraDSQLUtil {
     } else if (config.connectionString) {
       // Connection string properties override as set by upstream library.
       dsqlConfig = Object.assign({}, config, parseConnectionString(config.connectionString));
+      delete dsqlConfig.connectionString;
     } else {
       dsqlConfig = config;
     }
