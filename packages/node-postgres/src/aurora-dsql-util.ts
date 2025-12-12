@@ -10,7 +10,7 @@ import {
 } from "@smithy/types";
 import { AuroraDSQLConfig } from "./config/aurora-dsql-config.js";
 import { AuroraDSQLPoolConfig } from "./config/aurora-dsql-pool-config.js";
-import { parse, ConnectionOptions } from "pg-connection-string";
+import { parseIntoClientConfig } from "pg-connection-string";
 
 const ADMIN_USER = "admin";
 const PRE_REGION_HOST_PATTERN = ".dsql.";
@@ -19,14 +19,20 @@ const POST_REGION_HOST_PATTERN = ".on.aws";
 /**
  * Parse the provided connection string into an equivalent object.
  */
-function parseConnectionString(connectionString: string): ConnectionOptions {
-  const parsed = parse(connectionString);
+function parseConnectionString(connectionString: string): AuroraDSQLConfig {
+  const parsed = parseIntoClientConfig(connectionString) as AuroraDSQLConfig;
 
-  // Upstream parsing uses falsey values for unset configuration. We remove keys
-  // here to make it easier to work with the result.
-  for (const key of Object.keys(parsed)) {
-    if (!parsed[key]) delete parsed[key];
+  // The user is parsed as an empty string if it is not provided. We remove the
+  // key instead, to make it easier to work with the result.
+  if (!parsed.user) {
+    delete parsed.user;
   }
+
+  // Upstream parsing gives strings by default, but we need a number here.
+  if (parsed.tokenDurationSecs !== undefined) {
+    parsed.tokenDurationSecs = parseInt(parsed.tokenDurationSecs as unknown as string, 10);
+  }
+
   return parsed;
 }
 

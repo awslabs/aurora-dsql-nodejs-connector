@@ -207,6 +207,15 @@ describe("AuroraDSQLUtil", () => {
       expect(result.host).toBe("cluster.dsql.us-east-1.on.aws");
     });
 
+    it("should parse tokenDurationSecs from connection string as number", () => {
+      const connectionString =
+        "postgresql://cluster.dsql.us-east-1.on.aws?tokenDurationSecs=600";
+
+      const result = AuroraDSQLUtil.parsePgConfig(connectionString);
+
+      expect(result.tokenDurationSecs).toBe(600);
+    });
+
     it("should override config values with connectionString values", () => {
       const config = {
         host: "config-host.dsql.us-west-2.on.aws",
