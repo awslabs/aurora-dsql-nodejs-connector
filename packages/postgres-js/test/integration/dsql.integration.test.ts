@@ -182,13 +182,8 @@ describe('DSQL Integration Tests', () => {
             customCredentialsProvider: trackingProvider,
         });
 
-        try {
-            const result = await sql`SELECT 1 as test_value`;
-            expect(result[0].test_value).toBe(1);
-            expect(providerCalled).toBe(true);
-        } finally {
-            await sql.end();
-        }
+        await verifySuccessfulConnection(sql);
+        expect(providerCalled).toBe(true);
     });
 
     // Verifies the provider takes precedence over any other credentials source.
