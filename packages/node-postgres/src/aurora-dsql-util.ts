@@ -98,10 +98,10 @@ export class AuroraDSQLUtil {
   ): AuroraDSQLConfig | AuroraDSQLPoolConfig {
     let dsqlConfig: AuroraDSQLConfig | AuroraDSQLPoolConfig;
     if (typeof config === "string") {
-      dsqlConfig = this.parseConnectionString(config) as AuroraDSQLConfig;
+      dsqlConfig = AuroraDSQLUtil.parseConnectionString(config) as AuroraDSQLConfig;
     } else if (config.connectionString) {
       // Connection string properties override as set by upstream library.
-      dsqlConfig = Object.assign({}, config, this.parseConnectionString(config.connectionString));
+      dsqlConfig = Object.assign({}, config, AuroraDSQLUtil.parseConnectionString(config.connectionString));
       delete dsqlConfig.connectionString;
     } else {
       dsqlConfig = config;
