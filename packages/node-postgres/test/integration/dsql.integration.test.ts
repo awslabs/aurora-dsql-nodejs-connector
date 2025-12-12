@@ -4,6 +4,7 @@
  */
 
 import { jest, describe, test, expect } from "@jest/globals";
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { AuroraDSQLClient } from "../../src/aurora-dsql-client";
 import { AuroraDSQLPool } from "../../src/aurora-dsql-pool";
 
@@ -90,6 +91,38 @@ describe("DSQL Integration Tests", () => {
         await client.end();
       }
     });
+
+    test("should connect with custom credentials provider", async () => {
+      let providerCalled = false;
+      const trackingProvider = async () => {
+        providerCalled = true;
+        return fromNodeProviderChain()();
+      };
+
+      const client = new AuroraDSQLClient({
+        host: clusterEndpoint,
+        user: "admin",
+        customCredentialsProvider: trackingProvider,
+      });
+      await verifySuccessfulConnection(client);
+      expect(providerCalled).toBe(true);
+    });
+
+    // Verifies the provider takes precedence over any other credentials source.
+    test("should fail with invalid custom credentials provider", async () => {
+      const invalidProvider = async () => ({
+        accessKeyId: "INVALID_ACCESS_KEY",
+        secretAccessKey: "INVALID_SECRET_KEY",
+      });
+
+      const client = new AuroraDSQLClient({
+        host: clusterEndpoint,
+        user: "admin",
+        customCredentialsProvider: invalidProvider,
+      });
+
+      await expect(client.connect()).rejects.toThrow();
+    });
   });
 
   describe("AuroraDSQLPool", () => {
@@ -129,6 +162,44 @@ describe("DSQL Integration Tests", () => {
       } finally {
         await pool.end();
       }
+    });
+
+    test("should connect with custom credentials provider", async () => {
+      let providerCalled = false;
+      const trackingProvider = async () => {
+        providerCalled = true;
+        return fromNodeProviderChain()();
+      };
+
+      const pool = new AuroraDSQLPool({
+        host: clusterEndpoint,
+        user: "admin",
+        customCredentialsProvider: trackingProvider,
+      });
+
+      try {
+        const result = await pool.query("SELECT 1 as test_value");
+        expect(result.rows[0].test_value).toBe(1);
+        expect(providerCalled).toBe(true);
+      } finally {
+        await pool.end();
+      }
+    });
+
+    // Verifies the provider takes precedence over any other credentials source.
+    test("should fail with invalid custom credentials provider", async () => {
+      const invalidProvider = async () => ({
+        accessKeyId: "INVALID_ACCESS_KEY",
+        secretAccessKey: "INVALID_SECRET_KEY",
+      });
+
+      const pool = new AuroraDSQLPool({
+        host: clusterEndpoint,
+        user: "admin",
+        customCredentialsProvider: invalidProvider,
+      });
+
+      await expect(pool.query("SELECT 1")).rejects.toThrow();
     });
   });
 });

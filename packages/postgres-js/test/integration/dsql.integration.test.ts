@@ -5,6 +5,7 @@
 import {auroraDSQLPostgres} from '../../src/client';
 import postgres from "postgres";
 import {jest} from '@jest/globals';
+import {fromNodeProviderChain} from "@aws-sdk/credential-providers";
 
 jest.setTimeout(30000);
 
@@ -166,5 +167,43 @@ describe('DSQL Integration Tests', () => {
             region: region
         });
         await verifySuccessfulConnection(sql);
+    });
+
+    test('should connect with custom credentials provider', async () => {
+        let providerCalled = false;
+        const trackingProvider = async () => {
+            providerCalled = true;
+            return fromNodeProviderChain()();
+        };
+
+        const sql = auroraDSQLPostgres({
+            host: clusterEndpoint,
+            username: 'admin',
+            customCredentialsProvider: trackingProvider,
+        });
+
+        try {
+            const result = await sql`SELECT 1 as test_value`;
+            expect(result[0].test_value).toBe(1);
+            expect(providerCalled).toBe(true);
+        } finally {
+            await sql.end();
+        }
+    });
+
+    // Verifies the provider takes precedence over any other credentials source.
+    test('should fail with invalid custom credentials provider', async () => {
+        const invalidProvider = async () => ({
+            accessKeyId: "INVALID_ACCESS_KEY",
+            secretAccessKey: "INVALID_SECRET_KEY",
+        });
+
+        const sql = auroraDSQLPostgres({
+            host: clusterEndpoint,
+            username: 'admin',
+            customCredentialsProvider: invalidProvider,
+        });
+
+        await expect(sql`SELECT 1`).rejects.toThrow();
     });
 });
