@@ -186,6 +186,17 @@ describe('DSQL Integration Tests', () => {
         expect(providerCalled).toBe(true);
     });
 
+    test('should connect with custom credentials identity', async () => {
+        const credentials = await fromNodeProviderChain()();
+        const sql = auroraDSQLPostgres({
+            host: clusterEndpoint,
+            username: 'admin',
+            customCredentialsProvider: credentials,
+        });
+
+        await verifySuccessfulConnection(sql);
+    });
+
     // Verifies the provider takes precedence over any other credentials source.
     test('should fail with invalid custom credentials provider', async () => {
         const invalidProvider = async () => ({
@@ -197,6 +208,20 @@ describe('DSQL Integration Tests', () => {
             host: clusterEndpoint,
             username: 'admin',
             customCredentialsProvider: invalidProvider,
+        });
+
+        await expect(sql`SELECT 1`).rejects.toThrow();
+    });
+
+    // Verifies the identity takes precedence over any other credentials source.
+    test('should fail with invalid custom credentials identity', async () => {
+        const sql = auroraDSQLPostgres({
+            host: clusterEndpoint,
+            username: 'admin',
+            customCredentialsProvider: {
+                accessKeyId: "INVALID_ACCESS_KEY",
+                secretAccessKey: "INVALID_SECRET_KEY",
+            },
         });
 
         await expect(sql`SELECT 1`).rejects.toThrow();
