@@ -1,6 +1,6 @@
 {
   "name": "@aws/aurora-dsql-node-postgres-connector",
-  "version": "0.1.0",
+  "version": "0.1.5",
   "description": "An AWS Aurora DSQL connector with IAM authentication for node-postgres",
   "license": "Apache-2.0",
   "repository": {
@@ -13,11 +13,30 @@
     "access": "public"
   },
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
   "scripts": {
-    "build": "tsc",
-    "test": "jest",
+    "clean": "rm -rf dist/ node_modules/",
+    "build": "npm run build:dev",
+    "build:dev": "npm run typecheck && tsdown \"src/**/*.ts\" --format cjs,esm --dts --sourcemap",
+    "build:prod": "npm run typecheck && tsdown src/index.ts --format cjs,esm --dts",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "jest --testPathIgnorePatterns=integration",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPatterns=integration",
     "test:watch": "jest --watch",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "lint": "eslint src/ test/",
@@ -29,7 +48,7 @@
   ],
   "dependencies": {
     "@aws-sdk/credential-providers": "^3.894.0",
-    "@aws-sdk/dsql-signer": "^3.920.0"
+    "@aws-sdk/dsql-signer": "^3.940.0"
   },
   "peerDependencies": {
     "pg": "^8.16.3"
@@ -37,15 +56,16 @@
   "devDependencies": {
     "@eslint/js": "^9.37.0",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.9.2",
+    "@types/node": "^25.0.0",
     "@types/pg": "^8.15.6",
-    "@typescript-eslint/eslint-plugin": "^8.46.2",
-    "@typescript-eslint/parser": "^8.46.2",
-    "eslint": "^9.38.0",
+    "@typescript-eslint/eslint-plugin": "^8.48.0",
+    "@typescript-eslint/parser": "^8.48.0",
+    "eslint": "^9.39.1",
     "eslint-plugin-header": "^3.1.1",
     "jest": "^30.2.0",
     "pg": "^8.16.3",
     "ts-jest": "^29.4.5",
+    "tsdown": "^0.17.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }

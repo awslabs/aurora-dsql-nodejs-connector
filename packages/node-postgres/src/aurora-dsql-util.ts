@@ -8,15 +8,36 @@ import {
   AwsCredentialIdentity,
   AwsCredentialIdentityProvider,
 } from "@smithy/types";
-import { AuroraDSQLConfig } from "./config/aurora-dsql-config";
-import { AuroraDSQLPoolConfig } from "./config/aurora-dsql-pool-config";
-import { parse } from "pg-connection-string";
+import { AuroraDSQLConfig } from "./config/aurora-dsql-config.js";
+import { AuroraDSQLPoolConfig } from "./config/aurora-dsql-pool-config.js";
+import { parseIntoClientConfig } from "pg-connection-string";
 
 const ADMIN_USER = "admin";
 const PRE_REGION_HOST_PATTERN = ".dsql.";
 const POST_REGION_HOST_PATTERN = ".on.aws";
 
 export class AuroraDSQLUtil {
+
+  /**
+   * Parse the provided connection string into an equivalent object.
+   */
+  private static parseConnectionString(connectionString: string): AuroraDSQLConfig {
+    const parsed = parseIntoClientConfig(connectionString) as AuroraDSQLConfig;
+
+    // The user is parsed as an empty string if it is not provided. We remove the
+    // key instead, to make it easier to work with the result.
+    if (!parsed.user) {
+      delete parsed.user;
+    }
+
+    // Upstream parsing gives strings by default, but we need a number here.
+    if (parsed.tokenDurationSecs !== undefined) {
+      parsed.tokenDurationSecs = parseInt(parsed.tokenDurationSecs as unknown as string, 10);
+    }
+
+    return parsed;
+  }
+
   public static parseRegion(host: string): string {
     if (!host) {
       throw new Error("Hostname is required to parse region");
@@ -27,7 +48,7 @@ export class AuroraDSQLUtil {
       return match[1];
     }
 
-    throw new Error(`Unable to parse region from hostname: ${host}`);
+    throw new Error(`Unable to parse region from hostname: '${host}'`);
   }
 
   public static async getDSQLToken(
@@ -77,7 +98,11 @@ export class AuroraDSQLUtil {
   ): AuroraDSQLConfig | AuroraDSQLPoolConfig {
     let dsqlConfig: AuroraDSQLConfig | AuroraDSQLPoolConfig;
     if (typeof config === "string") {
-      dsqlConfig = parse(config) as AuroraDSQLConfig;
+      dsqlConfig = AuroraDSQLUtil.parseConnectionString(config) as AuroraDSQLConfig;
+    } else if (config.connectionString) {
+      // Connection string properties override as set by upstream library.
+      dsqlConfig = Object.assign({}, config, AuroraDSQLUtil.parseConnectionString(config.connectionString));
+      delete dsqlConfig.connectionString;
     } else {
       dsqlConfig = config;
     }
@@ -86,20 +111,36 @@ export class AuroraDSQLUtil {
       throw new Error("Host is required");
     }
 
-    // check if host is a clusterId or cluster endpoint
-    try {
-      dsqlConfig.region = AuroraDSQLUtil.parseRegion(dsqlConfig.host);
-    } catch {
-      //clusterId is specified in the host name
-      dsqlConfig.region =
-        dsqlConfig.region ||
-        process.env.AWS_REGION ||
-        process.env.AWS_DEFAULT_REGION;
-      if (dsqlConfig.region === undefined) {
-        throw new Error("Region is not specified");
+    // If this doesn't look like a URL, we treat it as the cluster ID rather
+    // than the full endpoint.
+    const isClusterId = !dsqlConfig.host.includes('.');
+
+    let parsedRegion: string | undefined;
+    if (!isClusterId) {
+      try {
+        parsedRegion = AuroraDSQLUtil.parseRegion(dsqlConfig.host);
+      } catch {
+        // Couldn't parse region from hostname.
       }
+    }
+
+    dsqlConfig.region =
+      dsqlConfig.region ||
+      parsedRegion ||
+      process.env.AWS_REGION ||
+      process.env.AWS_DEFAULT_REGION;
+
+    if (dsqlConfig.region === undefined) {
+      if (isClusterId) {
+        throw new Error(`Region is not specified for cluster '${dsqlConfig.host}'`);
+      } else {
+        throw new Error(`Region is not specified and could not be parsed from hostname: '${dsqlConfig.host}'`);
+      }
+    }
+
+    if (isClusterId) {
       dsqlConfig.host = AuroraDSQLUtil.buildHostnameFromIdAndRegion(
-        dsqlConfig.host!,
+        dsqlConfig.host,
         dsqlConfig.region
       );
     }
