@@ -30,8 +30,6 @@ updates:
     labels: [ "dependencies", "javascript", "node-postgres-example" ]
     schedule:
       interval: "monthly"
-    ignore:
-      - dependency-name: "@aws/aurora-dsql-node-postgres-connector"
     groups:
       production:
         dependency-type: "production"
@@ -42,8 +40,6 @@ updates:
     labels: [ "dependencies", "javascript", "postgres-js-example" ]
     schedule:
       interval: "monthly"
-    ignore:
-      - dependency-name: "@aws/aurora-dsql-postgresjs-connector"
     groups:
       production:
         dependency-type: "production"
