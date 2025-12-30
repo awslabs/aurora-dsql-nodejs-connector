@@ -7,8 +7,4 @@ export default defineConfig({
   publint: {
     strict: true,
   },
-  attw: {
-    profile: 'strict',
-    level: 'error'
-  },
 });
