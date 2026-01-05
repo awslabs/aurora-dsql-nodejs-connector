@@ -3,46 +3,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import pg from "pg";
 import assert from "node:assert";
 import { AuroraDSQLClient } from "@aws/aurora-dsql-node-postgres-connector";
-
-const { Client } = pg;
 
 const ADMIN = "admin";
 const NON_ADMIN_SCHEMA = "myschema";
 
-interface Owner {
-  id: string;
-  city: string;
-}
-
-async function getConnection(
-  clusterEndpoint: string,
-  user: string,
-  region: string
-): Promise<pg.Client> {
+async function getConnection(clusterEndpoint, user) {
   const client = new AuroraDSQLClient({
     host: clusterEndpoint,
     user: user,
   });
 
-  // Connect
   await client.connect();
   return client;
 }
 
-async function example(): Promise<void> {
+async function example() {
   const clusterEndpoint = process.env.CLUSTER_ENDPOINT;
-  assert(clusterEndpoint);
+  assert(clusterEndpoint, "CLUSTER_ENDPOINT environment variable is not set");
   const user = process.env.CLUSTER_USER;
-  assert(user);
-  const region = process.env.REGION;
-  assert(region);
+  assert(user, "CLUSTER_USER environment variable is not set");
 
-  let client: pg.Client | undefined;
+  let client;
   try {
-    client = await getConnection(clusterEndpoint, user, region);
+    client = await getConnection(clusterEndpoint, user);
 
     if (user !== ADMIN) {
       await client.query("SET search_path=" + NON_ADMIN_SCHEMA);
@@ -63,7 +48,7 @@ async function example(): Promise<void> {
     );
 
     // Check that data is inserted by reading it back
-    const result = await client.query<Owner>(
+    const result = await client.query(
       "SELECT id, city FROM owner where name='John Doe'"
     );
     assert.deepEqual(result.rows[0].city, "Anytown");
@@ -75,7 +60,7 @@ async function example(): Promise<void> {
     console.error(error);
     throw error;
   } finally {
-    client?.end();
+    await client?.end();
   }
 }
 
