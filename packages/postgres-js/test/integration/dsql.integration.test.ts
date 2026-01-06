@@ -242,8 +242,7 @@ const isNode20 = process.version.startsWith('v20.');
             host: clusterEndpoint,
             database: 'postgres',
             username: 'admin',
-            region: region,
-            port: 443
+            region: region
         });
         await verifySuccessfulConnection(sql);
     });
@@ -252,8 +251,7 @@ const isNode20 = process.version.startsWith('v20.');
         const sql = auroraDSQLWsPostgres({
             host: clusterEndpoint,
             database: 'postgres',
-            username: 'admin',
-            port: 443
+            username: 'admin'
         });
         await verifySuccessfulConnection(sql);
     });
@@ -262,8 +260,7 @@ const isNode20 = process.version.startsWith('v20.');
         const sql = auroraDSQLWsPostgres({
             host: clusterEndpoint,
             username: 'admin',
-            region: region,
-            port: 443
+            region: region
         });
         await verifySuccessfulConnection(sql);
     });
