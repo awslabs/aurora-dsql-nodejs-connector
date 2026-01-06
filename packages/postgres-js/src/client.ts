@@ -210,35 +210,24 @@ export function auroraDSQLWsPostgres<
 
   if (!opts.pass) {
     opts.pass = async () => {
-      let getLatestCredentials =
-        opts.getLatestCredentials || options?.getLatestCredentials;
-
-      if (getLatestCredentials) {
-        signerConfig.credentials = await getLatestCredentials();
-      }
       let signer = new DsqlSigner(signerConfig);
       return await getToken(signer, opts.username);
     };
   }
 
   // swap out socket to use websocket
-  if (!opts.socket) {
-    opts.socket = createPostgresWs(opts);
-  }
+  opts.socket = createPostgresWs(opts);
 
   // ssl must be false otherwise postgres.js will try to use the net.socket 
-  if (!opts.ssl) {
-    opts.ssl = false;
-  }
+  opts.ssl = false;
 
   if (opts.connectionCheck == undefined) {
-    // enable connection check with select 1 before every query
-    opts.connectionCheck = true;
+    // disable connection check by default 
+    // connection check sends a 'select 1' before every query
+    opts.connectionCheck = false;
   }
 
-  if (!opts.port) {
-    opts.port = 443;
-  }
+  opts.port = 443;
 
   return typeof urlOrOptions === "string"
     ? postgres(urlOrOptions, opts)
@@ -320,13 +309,13 @@ export interface AuroraDSQLConfig<T extends Record<string, PostgresType<T>>>
 }
 
 export interface AuroraDSQLWsConfig<T extends Record<string, PostgresType<T>>>
-  extends postgres.Options<T> {
+  extends Omit<postgres.Options<T>, "socket" | "ssl" | "port"> {
   region?: string;
   tokenDurationSecs?: number;
   customCredentialsProvider?:
   | AwsCredentialIdentity
   | AwsCredentialIdentityProvider;
-  getLatestCredentials?: () => Promise<AwsCredentialIdentity>;
-  max?: number;
   connectionCheck?: boolean;
+  connectionId?: string;
+  onReservedConnectionClose?: (connectionId?: string) => void;
 }
