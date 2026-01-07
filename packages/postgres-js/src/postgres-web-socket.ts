@@ -10,19 +10,17 @@ import { Mutex } from "async-mutex";
 const PROTOCOL_VERSION = 196608; // Protocol version 3.0
 const HEARTBEAT_TIMEOUT = 5_000; // 5 seconds
 
-// completion states for extended query protocol 
-const PARSE_COMPLETE = 49;
-const BIND_COMPLETE = 50;
-const CLOSE_COMPLETE = 51;
-
-
 interface Query {
   buffer: Buffer | Uint8Array;
   numOfQueries: number;
   isHeartBeat: boolean;
 }
 
-type ReadyState = "closed" | "querying" | "open";
+enum ReadyState {
+  Closed = 'closed',
+  Querying = 'querying',
+  Open = 'open'
+}
 
 export class PostgresWs extends EventEmitter {
   private mutex = new Mutex();
@@ -36,7 +34,7 @@ export class PostgresWs extends EventEmitter {
   private heartBeatTimeout: NodeJS.Timeout | null = null;
   private pendingQueries: Query[] = [];
 
-  public readyState: ReadyState = "closed";
+  public readyState: ReadyState = ReadyState.Closed;
 
 
   // these parameters are referenced when an Error is thrown
@@ -83,7 +81,7 @@ export class PostgresWs extends EventEmitter {
       // remove the pendingQueries now that we received the reply only if the querycount is at 0
       if (this.pendingQueries[0].numOfQueries <= 0) {
         this.pendingQueries.shift();
-        this.readyState = "open";
+        this.readyState = ReadyState.Open;
         this.disableHeartBeat = false;
         this.releaseMutex();
         this.processQueue();
@@ -118,7 +116,7 @@ export class PostgresWs extends EventEmitter {
     this.ws.onopen = () => {
       this.connected = true;
       this.sendStartup();
-      this.readyState = "open";
+      this.readyState = ReadyState.Open;
     };
 
     this.ws.onmessage = (event: MessageEvent) => {
@@ -142,13 +140,6 @@ export class PostgresWs extends EventEmitter {
             }
           }
         }
-
-        // add support for postgres extended query protocol 
-        // since these commands don't include ReadyForQuery (Z) until Sync (S) 
-        // flush these completed queries from the pendingQueries
-        if (data.length > 0 && (data[0] === PARSE_COMPLETE || data[0] === BIND_COMPLETE || data[0] === CLOSE_COMPLETE)) {
-          this.onReadyForQuery();
-        }
       }
 
       this.emit("data", Buffer.from(data));
@@ -168,7 +159,7 @@ export class PostgresWs extends EventEmitter {
       this.releaseMutex();
 
       this.connected = false;
-      this.readyState = "closed";
+      this.readyState = ReadyState.Closed;
       this.ws = null;
       this.emit("close");
 
@@ -198,30 +189,35 @@ export class PostgresWs extends EventEmitter {
       return false;
     }
 
-    // disabled connection check (heart beat) directly send message to websocket
-    if (!this.config.connectionCheck) {
-      this.ws.send(data);
-      return true;
-    }
-
-    // Count queries in the buffer
-    let queryCount = 0;
     let offset = 0;
+
+    let queryCount = 0; // simple query 
+    let hasSync = false; // extended query protocol 
 
     while (offset < data.length) {
       if (data[offset] === "Q".charCodeAt(0)) {
         queryCount++;
+      }
 
-        // Read message length to skip to next message
-        if (offset + 5 <= data.length) {
-          const length = new DataView(data.buffer, data.byteOffset + offset + 1, 4).getInt32(0, false);
-          offset += 1 + length;
-        } else {
-          break;
-        }
+      if (data[offset] === "S".charCodeAt(0)) {
+        hasSync = true;
+      }
+
+      // Read message length to skip to next message
+      if (offset + 5 <= data.length) {
+        const length = new DataView(data.buffer, data.byteOffset + offset + 1, 4).getInt32(0, false);
+        offset += 1 + length;
       } else {
         break;
       }
+    }
+
+    // directly send message to websocket when 
+    // * connection check (heart beat) is disabled 
+    // * Z (ReadyForQuery) message is not expected to be returned
+    if (!this.config.connectionCheck || queryCount == 0 || hasSync === false) {
+      this.ws.send(data);
+      return true;
     }
 
     // if the buffer contains a query, send a heart beat first
@@ -258,7 +254,7 @@ export class PostgresWs extends EventEmitter {
     while (this.pendingQueries.length > 0 && this.pendingQueries[0].isHeartBeat) {
       this.pendingQueries.shift();
     }
-    this.readyState = "open";
+    this.readyState = ReadyState.Open;
     this.releaseMutex();
 
     if (this.pendingQueries.length > 0) {
@@ -269,7 +265,7 @@ export class PostgresWs extends EventEmitter {
   private async processQueue(): Promise<void> {
     if (
       this.mutexRelease ||
-      this.readyState !== "open" ||
+      this.readyState !== ReadyState.Open ||
       this.pendingQueries.length === 0
     ) {
       return;
@@ -286,7 +282,7 @@ export class PostgresWs extends EventEmitter {
     const data = this.pendingQueries[0];
 
     if (data.buffer.length > 0 && data.buffer[0] === "Q".charCodeAt(0)) {
-      this.readyState = "querying";
+      this.readyState = ReadyState.Querying;
     }
 
     if (data.isHeartBeat) {
@@ -306,7 +302,7 @@ export class PostgresWs extends EventEmitter {
   }
 
   end(): void {
-    if (this.ws && this.readyState !== "closed") {
+    if (this.ws && this.readyState !== ReadyState.Closed) {
       this.ws.close();
     }
   }
