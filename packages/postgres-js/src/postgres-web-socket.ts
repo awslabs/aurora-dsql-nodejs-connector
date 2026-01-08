@@ -215,7 +215,7 @@ export class PostgresWs extends EventEmitter {
     // directly send message to websocket when 
     // * connection check (heart beat) is disabled 
     // * Z (ReadyForQuery) message is not expected to be returned
-    if (!this.config.connectionCheck || queryCount == 0 || hasSync === false) {
+    if (!this.config.connectionCheck || (queryCount == 0 && hasSync === false)) {
       this.ws.send(data);
       return true;
     }
