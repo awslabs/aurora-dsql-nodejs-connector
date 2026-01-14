@@ -163,8 +163,40 @@ export class PostgresWs extends EventEmitter {
     return buf;
   }
 
-  write(data: Buffer | Uint8Array): boolean {
+  // future proofing in case postgres.js starts using the write function with 3 parameters
+  // currently the library uses the write function with 2 parameters
+  // callback is needed for copy related operations 
+  write(data: Buffer | Uint8Array, callback?: (err?: Error) => void): boolean;
+  write(data: string, encoding?: string, callback?: (err?: Error) => void): boolean;
+
+  write(
+    data: Buffer | Uint8Array | string,
+    encodingOrCallback?: string | ((err?: Error) => void),
+    callback?: (err?: Error) => void
+  ): boolean {
+
+    let callbackFn: ((err?: Error) => void) | undefined;
+
+    if (typeof encodingOrCallback === 'function') {
+      callbackFn = encodingOrCallback;
+    } else {
+      callbackFn = callback;
+    }
+
+    let sendData: Uint8Array;
+    if (typeof data === 'string') {
+      const encoder = new TextEncoder();
+      sendData = encoder.encode(data);  // Always UTF-8
+    } else if (data instanceof Buffer) {
+      sendData = new Uint8Array(data);
+    } else {
+      sendData = data;
+    }
+
     if (!this.ws || !this.connected) {
+      if (callbackFn) {
+        callbackFn(new Error("websocket is not connected"));
+      }
       return false;
     }
 
@@ -173,18 +205,18 @@ export class PostgresWs extends EventEmitter {
     let queryCount = 0; // simple query 
     let hasSync = false; // extended query protocol 
 
-    while (offset < data.length) {
-      if (data[offset] === "Q".charCodeAt(0)) {
+    while (offset < sendData.length) {
+      if (sendData[offset] === "Q".charCodeAt(0)) {
         queryCount++;
       }
 
-      if (data[offset] === "S".charCodeAt(0)) {
+      if (sendData[offset] === "S".charCodeAt(0)) {
         hasSync = true;
       }
 
       // Read message length to skip to next message
-      if (offset + 5 <= data.length) {
-        const length = new DataView(data.buffer, data.byteOffset + offset + 1, 4).getInt32(0, false);
+      if (offset + 5 <= sendData.length) {
+        const length = new DataView(sendData.buffer, sendData.byteOffset + offset + 1, 4).getInt32(0, false);
         offset += 1 + length;
       } else {
         break;
@@ -195,8 +227,18 @@ export class PostgresWs extends EventEmitter {
     // * connection check (heart beat) is disabled 
     // * Z (ReadyForQuery) message is not expected to be returned
     if (!this.config.connectionCheck || (queryCount == 0 && hasSync === false)) {
-      this.ws.send(data);
-      return true;
+      try {
+        this.ws.send(sendData);
+        if (callbackFn) {
+          callbackFn();
+        }
+        return true;
+      } catch (err) {
+        if (callbackFn) {
+          callbackFn(err as Error);
+        }
+        return false;
+      }
     }
 
     // if the buffer contains a query, send a heart beat first
@@ -209,8 +251,12 @@ export class PostgresWs extends EventEmitter {
       const buf = this.createQueryBuffer("select 1;");
       this.pendingQueries.push({ buffer: buf, numOfQueries: 1, isHeartBeat: true });
     }
-    this.pendingQueries.push({ buffer: data, numOfQueries: queryCount, isHeartBeat: false });
+    this.pendingQueries.push({ buffer: sendData, numOfQueries: queryCount, isHeartBeat: false });
     this.processQueue();
+
+    if (callbackFn) {
+      callbackFn();
+    }
 
     return true;
   }
