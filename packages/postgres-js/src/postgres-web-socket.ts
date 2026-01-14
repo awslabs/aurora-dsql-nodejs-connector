@@ -7,7 +7,6 @@ import { EventEmitter } from "events";
 import { AuroraDSQLWsConfig } from "./client";
 import { Mutex } from "async-mutex";
 
-const PROTOCOL_VERSION = 196608; // Protocol version 3.0
 const HEARTBEAT_TIMEOUT = 5_000; // 5 seconds
 
 interface Query {
@@ -47,30 +46,6 @@ export class PostgresWs extends EventEmitter {
     this.host = config.host || '';
   }
 
-  private sendStartup(): void {
-    const params =
-      [
-        "user",
-        this.config.user || this.config.username,
-        "database",
-        this.config.database,
-      ].join("\0") + "\0\0";
-
-    const length = 4 + 4 + params.length;
-    const buf = new Uint8Array(length);
-    const view = new DataView(buf.buffer);
-
-    view.setInt32(0, length, false);
-    view.setInt32(4, PROTOCOL_VERSION, false);
-
-    const encoder = new TextEncoder();
-    buf.set(encoder.encode(params), 8);
-    if (this.ws) {
-      this.ws.send(buf);
-    } else {
-      throw Error("Websocket is not initialized");
-    }
-  }
 
   onReadyForQuery() {
     if (this.pendingQueries.length > 0) {
@@ -113,62 +88,66 @@ export class PostgresWs extends EventEmitter {
     this.ws = new WebSocket(url);
     this.ws.binaryType = "arraybuffer";
 
-    this.ws.onopen = () => {
-      this.connected = true;
-      this.sendStartup();
-      this.readyState = ReadyState.Open;
-    };
+    return new Promise((resolve, reject) => {
+      if (this.ws != null) {
+        this.ws.onopen = () => {
+          this.connected = true;
+          this.readyState = ReadyState.Open;
+          resolve(this);
+        };
 
-    this.ws.onmessage = (event: MessageEvent) => {
-      const data = new Uint8Array(event.data);
+        this.ws.onmessage = (event: MessageEvent) => {
+          const data = new Uint8Array(event.data);
 
-      if (this.config.connectionCheck) {
-        if (this.handleHeartBeatResponse(data)) return;
+          if (this.config.connectionCheck) {
+            if (this.handleHeartBeatResponse(data)) return;
 
-        if (data.length > 0 && data[0] === "Z".charCodeAt(0)) {
+            if (data.length > 0 && data[0] === "Z".charCodeAt(0)) {
 
-          if (data.length > 5) {
-            const status = String.fromCharCode(data[5]);
+              if (data.length > 5) {
+                const status = String.fromCharCode(data[5]);
 
-            if (status === "E") {
-              // temporarily disable heart beat when the connection has a transaction error
-              this.disableHeartBeat = true;
-              this.cleanUpTxErrorState();
-            } else {
-              // I (IDLE) or T (Transaction) 
-              this.onReadyForQuery();
+                if (status === "E") {
+                  // temporarily disable heart beat when the connection has a transaction error
+                  this.disableHeartBeat = true;
+                  this.cleanUpTxErrorState();
+                } else {
+                  // I (IDLE) or T (Transaction) 
+                  this.onReadyForQuery();
+                }
+              }
             }
           }
-        }
+
+          this.emit("data", Buffer.from(data));
+        };
+
+        this.ws.onerror = (event: Event) => {
+          const msg = (event as ErrorEvent).message || "WebSocket error";
+          const error = new Error(`${msg} ${this.host}:${this.port}`);
+          this.emit("error", error);
+          reject(error);
+        };
+
+        this.ws.onclose = () => {
+          if (this.heartBeatTimeout) {
+            clearTimeout(this.heartBeatTimeout);
+            this.heartBeatTimeout = null;
+          }
+
+          this.releaseMutex();
+
+          this.connected = false;
+          this.readyState = ReadyState.Closed;
+          this.ws = null;
+          this.emit("close");
+
+          if (this.config.onReservedConnectionClose) {
+            this.config.onReservedConnectionClose(this.config.connectionId);
+          }
+        };
       }
-
-      this.emit("data", Buffer.from(data));
-    };
-
-    this.ws.onerror = (event: Event) => {
-      const msg = (event as ErrorEvent).message || "WebSocket error";
-      this.emit("error", new Error(`${msg} ${this.host}:${this.port}`));
-    };
-
-    this.ws.onclose = () => {
-      if (this.heartBeatTimeout) {
-        clearTimeout(this.heartBeatTimeout);
-        this.heartBeatTimeout = null;
-      }
-
-      this.releaseMutex();
-
-      this.connected = false;
-      this.readyState = ReadyState.Closed;
-      this.ws = null;
-      this.emit("close");
-
-      if (this.config.onReservedConnectionClose) {
-        this.config.onReservedConnectionClose(this.config.connectionId);
-      }
-    };
-
-    return this;
+    });
   }
 
   createQueryBuffer(sql: string): Uint8Array {
@@ -340,8 +319,8 @@ export function createPostgresWs(
   config: AuroraDSQLWsConfig<{}>
 ): () => Promise<PostgresWs> {
   return async () => {
-    const socket = new PostgresWs(config);
 
+    const socket = new PostgresWs(config);
     await socket.connect();
     return socket;
   };
