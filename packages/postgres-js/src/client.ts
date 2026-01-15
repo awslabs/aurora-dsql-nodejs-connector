@@ -318,15 +318,15 @@ async function getToken(signer: DsqlSigner, username: string): Promise<string> {
  * @returns Formatted application_name string
  */
 function buildApplicationName(ormPrefix?: string): string {
-    if (ormPrefix) {
-        const trimmed = ormPrefix.trim();
-        if (trimmed) {
-            return `${trimmed}:${APPLICATION_NAME}`;
-        }
+  if (ormPrefix) {
+    const trimmed = ormPrefix.trim();
+    if (trimmed) {
+      return `${trimmed}:${APPLICATION_NAME}`;
     }
   }
   return APPLICATION_NAME;
 }
+
 export interface AuroraDSQLConfig<T extends Record<string, PostgresType<T>>> extends Omit<postgres.Options<T>, 'password' | 'pass'> {
 
   region?: string;
