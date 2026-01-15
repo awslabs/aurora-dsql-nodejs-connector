@@ -52,7 +52,7 @@ const options = {
   region: process.env.REGION,
   idle_timeout,
   connect_timeout: 10,
-  //connectionCheck: true,
+  connectionCheck: true,
   max: 1,
 }
 
