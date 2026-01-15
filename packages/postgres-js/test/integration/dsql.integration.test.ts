@@ -269,6 +269,7 @@ describe('auroraDSQLPostgres DSQL Integration Tests', () => {
     });
 });
 
+// Websocket is not available by default until node 21 and above
 const isNode20 = process.version.startsWith('v20.');
 (isNode20 ? describe.skip : describe)('auroraDSQLWsPostgres DSQL Integration Tests', () => {
     const clusterEndpoint = process.env.CLUSTER_ENDPOINT;
