@@ -9,6 +9,10 @@ import { Mutex } from "async-mutex";
 
 const HEARTBEAT_TIMEOUT = 5_000; // 5 seconds
 
+const MESSAGE_CODE_SIMPLE_QUERY = "Q".charCodeAt(0);
+const MESSAGE_CODE_SYNC = "S".charCodeAt(0);
+const MESSAGE_CODE_RFQ = "Z".charCodeAt(0);
+
 interface Query {
   buffer: Buffer | Uint8Array;
   numOfQueries: number;
@@ -102,7 +106,7 @@ export class PostgresWs extends EventEmitter {
           if (this.config.connectionCheck) {
             if (this.handleHeartBeatResponse(data)) return;
 
-            if (data.length > 0 && data[0] === "Z".charCodeAt(0)) {
+            if (data.length > 0 && data[0] === MESSAGE_CODE_RFQ) {
 
               if (data.length > 5) {
                 const status = String.fromCharCode(data[5]);
@@ -156,7 +160,7 @@ export class PostgresWs extends EventEmitter {
     const buf = new Uint8Array(1 + length);
     const view = new DataView(buf.buffer);
 
-    buf[0] = "Q".charCodeAt(0);
+    buf[0] = MESSAGE_CODE_SIMPLE_QUERY;
     view.setInt32(1, length, false);
     buf.set(sqlBytes, 5);
 
@@ -206,11 +210,11 @@ export class PostgresWs extends EventEmitter {
     let hasSync = false; // extended query protocol 
 
     while (offset < sendData.length) {
-      if (sendData[offset] === "Q".charCodeAt(0)) {
+      if (sendData[offset] === MESSAGE_CODE_SIMPLE_QUERY) {
         queryCount++;
       }
 
-      if (sendData[offset] === "S".charCodeAt(0)) {
+      if (sendData[offset] === MESSAGE_CODE_SYNC) {
         hasSync = true;
       }
 
@@ -306,7 +310,7 @@ export class PostgresWs extends EventEmitter {
 
     const data = this.pendingQueries[0];
 
-    if (data.buffer.length > 0 && data.buffer[0] === "Q".charCodeAt(0)) {
+    if (data.buffer.length > 0 && data.buffer[0] === MESSAGE_CODE_SIMPLE_QUERY) {
       this.readyState = ReadyState.Querying;
     }
 
