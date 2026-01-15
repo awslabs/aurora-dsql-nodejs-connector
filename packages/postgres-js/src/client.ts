@@ -318,18 +318,17 @@ function buildApplicationName(ormPrefix?: string): string {
   }
   return APPLICATION_NAME;
 }
-
 export interface AuroraDSQLConfig<T extends Record<string, PostgresType<T>>> extends Omit<postgres.Options<T>, 'password' | 'pass'> {
+
+  region?: string;
 
   profile?: string;
 
   tokenDurationSecs?: number;
 
-  customCredentialsProvider?:
-  | AwsCredentialIdentity
-  | AwsCredentialIdentityProvider;
-}
+  customCredentialsProvider?: AwsCredentialIdentity | AwsCredentialIdentityProvider;
 
+}
 export interface AuroraDSQLWsConfig<T extends Record<string, PostgresType<T>>>
   extends Omit<postgres.Options<T>, "socket" | "ssl" | "port"> {
   region?: string;
