@@ -170,7 +170,7 @@ console.log(result);
 await sql.end();
 ```
 
-## Configuration Options
+### Configuration Options
 
 | Option                      | Type                             | Required | Description                                              |
 |-----------------------------|----------------------------------|----------|----------------------------------------------------------|
