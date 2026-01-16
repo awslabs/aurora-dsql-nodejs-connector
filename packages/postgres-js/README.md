@@ -131,6 +131,56 @@ const sql = AuroraDSQLPostgres({
 
 All standard [Postgres.js options](https://github.com/porsager/postgres?tab=readme-ov-file#connection-details) are also supported.
 
+## Websocket Connector 
+The websocket connector provides an alternative connection method to Aurora DSQL using WebSockets instead of standard TCP sockets. This approach is specifically designed for front-end JavaScript applications. For Node.js server applications, use the standard TCP socket connector shown above.
+
+### Use cases
+- Browser Compatibility - Web browsers don't support raw TCP sockets (Node.js net module). WebSockets are the only way to establish persistent database connections from browser-based applications.
+
+- Client-Side Applications - Single-page applications (SPAs) built with React, Vue, Angular, etc. that need direct database access without going through a backend API server.
+
+- Simplified Architecture - Eliminates the need for a separate backend API layer when building prototypes or internal tools, allowing direct browser-to-database connections.
+
+### Basic Usage
+
+```typescript
+import type { AwsCredentialIdentity } from '@aws-sdk/types';
+import { auroraDSQLWsPostgres, AuroraDSQLWsConfig } from '@aws/aurora-dsql-postgresjs-connector';
+
+// for more details, refer to the websocket example
+const simulateGetCredentialsAPI = (): Promise<AwsCredentialIdentity> => {};
+
+const config: AuroraDSQLWsConfig<{}> = {
+  host: 'your-cluster.dsql.us-east-1.on.aws',
+  database: "postgres",
+  user: "admin",
+  customCredentialsProvider: simulateGetCredentialsAPI,
+};
+
+const sql = auroraDSQLWsPostgres(config);
+
+const result = await sql`SELECT version()`;
+console.log(result);
+await sql.end();
+```
+
+## Configuration Options
+
+| Option                      | Type                             | Required | Description                                              |
+|-----------------------------|----------------------------------|----------|----------------------------------------------------------|
+| `host`                      | `string`                         | Yes      | DSQL cluster hostname or cluster ID                      |
+| `database`                  | `string?`                        | No       | Database name                                            |
+| `username`                  | `string?`                        | No       | Database username (uses admin if not provided)           |
+| `region`                    | `string?`                        | No       | AWS region (auto-detected from hostname if not provided) |
+| `customCredentialsProvider` | `AwsCredentialIdentityProvider?` | No       | Custom AWS credentials provider                          |
+| `tokenDurationSecs`         | `number?`                        | No       | Token expiration time in seconds                         |
+| `connectionCheck`         | `boolean?`                        | No       | Perform a heart beat connectivity check with`Select 1` before every query (Default: false)
+| `connectionId`         | `string?`                        | No       | A connection identifier
+| `onReservedConnectionClose`         | `(connectionId?: string) => void?`                        | No       | A callback is executed upon unexpected closure of a reserved connection, such as a heartbeat failure. The connectionId is passed to the callback when available.
+Other standard [Postgres.js options](https://github.com/porsager/postgres?tab=readme-ov-file#connection-details) are also supported, except for `socket`, `port`, and `ssl`, which have default values.
+
+
+
 ## Authentication
 
 The connector automatically handles DSQL authentication by generating tokens using the DSQL client token generator. If the
