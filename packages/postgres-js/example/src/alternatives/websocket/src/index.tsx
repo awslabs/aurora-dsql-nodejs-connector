@@ -21,11 +21,9 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   React.useEffect(() => {
-
     // For testing purposes only, DO NOT USE in a production environment
     // Users must retrieve the AwsCredentialIdentity through a secure API
     const simulateSecureGetCredentialsAPI = (): Promise<AwsCredentialIdentity> => {
-
       return new Promise((resolve) => {
         setTimeout(async () => {
           const stsClient = new STSClient({
@@ -66,7 +64,6 @@ const App: React.FC = () => {
 
     const registerConnection = async () => {
       try {
-
         const wsConfig: AuroraDSQLWsConfig<{}> = {
           host: "your-cluster.dsql.us-east-1.on.aws",
           database: "postgres",
@@ -75,8 +72,6 @@ const App: React.FC = () => {
           tokenDurationSecs: 60, // 1 min in seconds
         };
         sql = auroraDSQLWsPostgres(wsConfig);
-
-
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         setResult(`Error: ${errorMessage} `);
@@ -97,13 +92,10 @@ const App: React.FC = () => {
       } else {
         throw new Error("Database connection not initialized");
       }
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       setResult(`Error: ${errorMessage} `);
-    }
-
-    finally {
+    } finally {
       setLoading(false);
     }
   };
