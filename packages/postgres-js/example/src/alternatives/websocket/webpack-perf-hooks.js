@@ -1,6 +1,5 @@
-const now = require('performance-now');
-module.exports = {
-    performance: {
-        now: now
-    }
+import now from 'performance-now';
+
+export const performance = {
+    now: now
 };

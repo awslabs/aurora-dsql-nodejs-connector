@@ -1,8 +1,13 @@
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const webpack = require('webpack');
-const path = require('path');
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import webpack from 'webpack';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-module.exports = {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+export default {
   entry: './src/index.tsx',
   module: {
     rules: [
@@ -26,10 +31,10 @@ module.exports = {
   resolve: {
     extensions: ['.tsx', '.ts', '.js', '.jsx'],
     fallback: {
-      'process/browser': require.resolve('process/browser'),
-      "buffer": require.resolve("buffer/"),
-      "timers": require.resolve("timers-browserify"),
-      "events": require.resolve("events/"),
+      'process/browser': path.resolve(__dirname, 'node_modules/process/browser.js'),
+      "buffer": path.resolve(__dirname, 'node_modules/buffer/index.js'),
+      "timers": path.resolve(__dirname, 'node_modules/timers-browserify/main.js'),
+      "events": path.resolve(__dirname, 'node_modules/events/events.js'),
       "stream": false,
       "crypto": false,
       "fs": false,

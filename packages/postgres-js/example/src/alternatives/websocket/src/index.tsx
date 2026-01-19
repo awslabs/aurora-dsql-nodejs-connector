@@ -15,48 +15,54 @@ import postgres from "postgres";
 
 let sql: postgres.Sql<{}> | null;
 
-// For testing purposes only, DO NOT USE in a production environment
-// Users must retrieve the AwsCredentialIdentity through a secure API
-const simulateSecureGetCredentialsAPI = (): Promise<AwsCredentialIdentity> => {
-
-  return new Promise((resolve) => {
-    setTimeout(async () => {
-      const stsClient = new STSClient({
-        region: "us-east-1",
-        credentials: {
-          // For testing only, DO NOT store the IAM accessKeyId and secretAccessKey inside the JavaScript source code
-          accessKeyId: "<TESTING_ACCESS_KEY_ID>",
-          secretAccessKey: "<TESTING_SECRET_ACCESS_KEY>",
-        },
-      });
-
-      // Use a role with access permissions that are scoped to data accessible by that user
-      const response = await stsClient.send(
-        new AssumeRoleCommand({
-          RoleArn: "arn:aws:iam::YOUR_TEST_ACCOUNT_NUMBER:role/YOUR_TEST_ROLE",
-          RoleSessionName: "sample_query_editor_react",
-        })
-      );
-
-      // Returns temporary session token credentials
-      if (response.Credentials) {
-        resolve({
-          // DO NOT use an IAM accessKeyId and secretAccessKey directly here 
-          accessKeyId: response.Credentials.AccessKeyId!,
-          secretAccessKey: response.Credentials.SecretAccessKey!,
-          sessionToken: response.Credentials.SessionToken!,
-        });
-      }
-    }, 50);
-  });
-};
-
 const App: React.FC = () => {
   const [query, setQuery] = useState(`SELECT NOW();`);
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
 
   React.useEffect(() => {
+
+    // For testing purposes only, DO NOT USE in a production environment
+    // Users must retrieve the AwsCredentialIdentity through a secure API
+    const simulateSecureGetCredentialsAPI = (): Promise<AwsCredentialIdentity> => {
+
+      return new Promise((resolve) => {
+        setTimeout(async () => {
+          const stsClient = new STSClient({
+            region: "us-east-1",
+            credentials: {
+              // For testing only, DO NOT store the IAM accessKeyId and secretAccessKey inside the JavaScript source code
+              accessKeyId: "<TESTING_ACCESS_KEY_ID>",
+              secretAccessKey: "<TESTING_SECRET_ACCESS_KEY>",
+            },
+          });
+
+          // Use a role with access permissions that are scoped to data accessible by that user
+          const response = await stsClient.send(
+            new AssumeRoleCommand({
+              RoleArn: "arn:aws:iam::YOUR_TEST_ACCOUNT_NUMBER:role/YOUR_TEST_ROLE",
+              RoleSessionName: "sample_query_editor_react",
+              DurationSeconds: 900, // 15 min in seconds
+            })
+          );
+
+          // Returns temporary session token credentials
+          if (response.Credentials) {
+            try {
+              resolve({
+                // DO NOT use an IAM accessKeyId and secretAccessKey directly here 
+                accessKeyId: response.Credentials.AccessKeyId!,
+                secretAccessKey: response.Credentials.SecretAccessKey!,
+                sessionToken: response.Credentials.SessionToken!,
+              });
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              setResult(`Error: ${errorMessage} `);
+            }
+          }
+        }, 50);
+      });
+    };
 
     const registerConnection = async () => {
       try {
@@ -71,30 +77,19 @@ const App: React.FC = () => {
         sql = auroraDSQLWsPostgres(wsConfig);
 
 
-      } catch (err) {
-
-        console.error('Full error object:', err);
-        if (err instanceof Error) {
-          console.error('Error message:', err.message);
-          console.error('Error stack:', err.stack);
-        }
-        if (typeof err === 'object' && err !== null) {
-          const error = err as any;
-          if (error.code) console.error('Error code:', error.code);
-          if (error.detail) console.error('Error detail:', error.detail);
-          if (error.hint) console.error('Error hint:', error.hint);
-        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        setResult(`Error: ${errorMessage} `);
       }
     };
 
     registerConnection();
   }, []);
 
-  const executeQuery = async (event: React.MouseEvent<HTMLButtonElement>) => {
+  const executeQuery = async () => {
     setLoading(true);
 
     try {
-
       if (sql) {
         let result;
         result = await sql.unsafe(query);
@@ -104,8 +99,10 @@ const App: React.FC = () => {
       }
 
     } catch (error) {
-      setResult(`Error: ${error} `);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setResult(`Error: ${errorMessage} `);
     }
+
     finally {
       setLoading(false);
     }
