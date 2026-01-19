@@ -67,7 +67,7 @@ const App: React.FC = () => {
         const wsConfig: AuroraDSQLWsConfig<{}> = {
           host: "your-cluster.dsql.us-east-1.on.aws",
           database: "postgres",
-          user: "non_admin_user",
+          user: "example",
           customCredentialsProvider: simulateSecureGetCredentialsAPI,
           tokenDurationSecs: 60, // 1 min in seconds
         };
