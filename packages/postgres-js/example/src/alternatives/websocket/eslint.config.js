@@ -18,7 +18,9 @@ export default [
       globals: {
         console: "readonly",
         setTimeout: "readonly",
-        document: "readonly"
+        document: "readonly",
+        window: "readonly",
+        HTMLButtonElement: "readonly"
       }
     },
     plugins: {

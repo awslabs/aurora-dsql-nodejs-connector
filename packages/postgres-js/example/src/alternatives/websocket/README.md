@@ -6,8 +6,9 @@ A React-based web application demonstrating how to connect to Amazon Aurora DSQL
 
 - Browser-based SQL query execution
 - WebSocket connection to Aurora DSQL
+- Amazon Cognito authentication for secure access
 - React UI with query editor
-- Real-time query results display
+- Real-time query results display 
 
 ## Prerequisites
 
@@ -25,9 +26,62 @@ A React-based web application demonstrating how to connect to Amazon Aurora DSQL
 * This code is not tested in every AWS Region. For more information, see
   [AWS Regional Services](https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services).
 
-## IAM Setup 
-### Create a connect only permission
-1. CREATE a new permission with the following JSON:
+## Amazon Cognito Setup 
+
+### Create User Pool
+
+A user pool is a user directory in Amazon Cognito that manages authentication, registration, and account recovery for users signing in with username/password. 
+
+1. AWS Console > Amazon Cognito > User pools > Click on `Create user pool`
+2. Application Type: Select `Single-page application SPA`
+3. Name your application: `Aurora DSQL Query Editor React`
+4. In Configure options under "Options for sign-in identifiers", check Email 
+5. Under "Self-registration", uncheck `Enable self-registration`
+6. Under "Required attributes for sign-up", select `email`
+7. Return URL: http://localhost:3000 (note: it's http not https as the demo is run locally) 
+
+### Add Allowed sign-out URL
+1. AWS Console > User pools > Click on the newly created `User pool`
+2. On the left side menu, click on Applications > App clients 
+3. Select `Aurora DSQL Query Editor React`
+4. Look for `Login Pages` tab above the `Quick setup guide` and click on it
+5. Click on `Edit` button 
+6. Under `Allowed sign-out URLs - optional`, add `http://localhost:3000`
+  
+### Create a user inside the user pool
+1. Click on the user pool
+2. User Management > Users 
+3. Click on the `Create user` button 
+4. Enter Email address 
+5. Select `Mark email address as verified`
+6. Set a temporary password (a new password will be set upon login)
+7. Click on `Create User`
+
+### Create Identity Pool
+
+An identity pool provides temporary AWS credentials by federating authenticated users from identity providers like Amazon Cognito user pools, enabling secure access to AWS services.
+
+1. AWS Console > Amazon Cognito > Identity pools
+2. Click on `Create identity pool`
+3. Under `User access`, select `Authenticated access`
+4. Under `Authenticated identity sources`, select `Amazon Cognito user pool`
+5. Click next
+6. Use `Create a new IAM role` and enter `aurora_dsql_query_editor_sample_role` as the new role name 
+7. Under `User pool details`, select the newly created user pool 
+8. Under `App Client ID`, select the client id with `Aurora DSQL Query Editor React`
+9. Click next 
+10. Enter `aurora_dsql_sample_react_identity_pool` as the `Identity pool name`
+11. Click next
+12. Click `Create identity pool`
+
+### Create a connect only policy
+This policy allows the user to connect only, but doesn't allow cluster management (e.g. create/edit/delete clusters). 
+1. Find out the resource ARN for your Aurora DSQL cluster 
+2. AWS Console > Aurora DSQL > Clusters > select the cluster 
+3. Under Cluster overview, the Amazon Resource Name for this cluster should be shown in this format `arn:aws:dsql:us-east-1:<ACCOUNT_NUMBER>:cluster/<CLUSTER_ID>`
+4. AWS Console > Policies > Create policy
+5. Select JSON 
+6. CREATE a new policy with the following JSON:
 ```json
 {
 	"Version": "2012-10-17",
@@ -38,88 +92,46 @@ A React-based web application demonstrating how to connect to Amazon Aurora DSQL
 			"Action": [
 				"dsql:DbConnect"
 			],
-			"Resource": "*"
+			"Resource": "arn:aws:dsql:us-east-1:<ACCOUNT_NUMBER>:cluster/<CLUSTER_ID>"
 		}
 	]
 }
 ```
-This permission allows the user to connect only but doesn't allow cluster management (e.g. create/edit/delete clusters). 
+7. Policy name: `aurora_dsql_db_connect_only`
 
-2. Policy name: `query_editor_connect`
-### Create IAM User
-1. Create an IAM user `query_editor`
-2. Permissions options: Select `Attach policies directly`
-3. Look for `query_editor_connect` select the checkbox on the left and click next 
-4. Create the user 
-5. Go back to AWS Console > IAM > Users > select `query_editor`
-6. Under Summary, click `Create access key`
-7. Select `Local code`
-8. Retrieve access key - ⚠️ For testing purposes only! Never store access and secret keys in JavaScript source code especially in a production environment. ⚠️ 
-
-### Create Assume Role
-1. Create Role 
-2. Trusted entity type: Select `Custom trust policy` and use the following template
-Replace `<account_number>` with your account number
-
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::<account_number>:user/query_editor"
-            },
-            "Action": "sts:AssumeRole",
-            "Condition": {}
-        }
-    ]
-}
-```
-
-3. Under Add permissions, look for `query_editor_connect` select the checkbox on the left and click next 
-4. Role name: `query_editor_connect_role`
-5. Go back to AWS Console > IAM > Roles > select `query_editor_connect_role`
-6. Look for the ARN (e.g. arn:aws:iam::<account_number>:role/query_editor_connect_role)
+### Attach policy to cognito role 
+1. AWS Console > Roles > select `aurora_dsql_query_editor_sample_role`
+2. Note down the ARN (shown in the format of `arn:aws:iam::<ACCOUNT_NUMBER>:role/service-role/aurora_dsql_query_editor_sample_role`) which will be used in the next section 
+3. Click on `Add permissions` > `Attach policies`
+4. Look for `aurora_dsql_db_connect_only` and select the check box on the left 
+5. Click on `Add permissions`
 
 ### Register a new user and associate the IAM role 
-1. Follow this guide [Authorizing database roles to connect to your cluster](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/using-database-and-iam-roles.html#using-database-and-iam-roles-custom-database-roles) to create a new user `example` and associate your role arn from step 6 above 
+1. Follow this guide [Authorizing database roles to connect to your cluster](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/using-database-and-iam-roles.html#using-database-and-iam-roles-custom-database-roles) to create a new user `example` and associate your role ARN from step 2 above 
 2. After this setup, the user `example` is ready to connect
 
 ## Configuration
 
-Update the following in `src/index.tsx`:
+Update the following values in `src/config.ts`:
 
-1. **Aurora DSQL endpoint:**
-   ```typescript
-   host: "your-cluster-endpoint.dsql.us-east-1.on.aws"
-   ```
+### User Pool Settings
 
-2. **IAM credentials** (for testing only):
-   
-   see step 8 of [Create IAM User](#create-iam-user)
-   ```typescript
-   accessKeyId: "<TESTING_ACCESS_KEY_ID>"
-   secretAccessKey: "<TESTING_SECRET_ACCESS_KEY>"
-   ```
+- `const region = "<COGNITO_REGION>"`;
+  - Check the top right of the Amazon Cognito Console beside your AWS user name e.g. `us-west-2`
+- `const userPoolId = "<USER_POOL_ID>";`
+  - AWS Console > Amazon Cognito > User pools (left menu bar) > User pool ID
+- `const clientId = "<USER_POOL_APP_CLIENT_ID>"; `
+  - AWS Console >  Amazon Cognito > User pools (left menu bar) > Select your User Pool > App clients (left menu bar) 
+- `const cognitoDomain = "<COGNITO_DOMAIN>";`
+  - AWS Console >  Amazon Cognito > User pools (left menu bar) > Select your User Pool > App clients (left menu bar) > Select your App client > look for "cognitoDomain" under App.js sample 
 
-3. **IAM Role ARN:**
-  
-   see step 6 of [Create Assume Role](#create-assume-role)
-   ```typescript
-   RoleArn: "arn:aws:iam::YOUR_TEST_ACCOUNT_NUMBER:role/YOUR_TEST_ROLE"
-   ```
+### Identity Pool Settings
+- `const identityPoolId = "<COGNITO_IDENTITY_POOL_ID>";`
+  - AWS Console > Amazon Cognito > Identity pools (left menu bar) > Identity pool ID
 
-## Security Warning
-
-⚠️ **IMPORTANT:** This sample includes IAM credentials directly in the source code for demonstration purposes only. 
-
-**DO NOT use this approach in production.** Instead:
-- Store credentials securely on a backend server
-- Implement a secure API endpoint to retrieve temporary credentials
-- Use AWS Cognito or similar authentication services
-- Never expose IAM credentials in client-side code
-
+### DSQL Cluster Settings
+- `const dsqlHost = "your-cluster-endpoint.dsql.us-east-1.on.aws";`
+  - AWS Console > Aurora DSQL > Clusters (left menu bar) > Endpoint
 
 ## Installation
 
@@ -138,15 +150,18 @@ npm run dev
 
 1. Start the development server
 2. Open http://localhost:3000 in your browser
-3. Enter a SQL query in the textarea
-4. Click "Execute Query" to run the query
-5. View results in the output panel
+3. Click "Login" and authenticate with your Cognito user credentials
+4. Enter a SQL query in the textarea
+5. Click "Execute Query" to run the query
+6. View results in the output panel
 
 ## Project Structure
 
 ```
 ├── src/
-│   └── index.tsx          # Main React application
+│   ├── config.ts          # Centralized configuration (Cognito, Identity Pool, DSQL)
+│   ├── App.tsx            # Main React component with authentication and query interface
+│   └── index.tsx          # React entry point
 ├── public/
 │   └── index.html         # HTML template
 ├── webpack.config.js      # Webpack configuration

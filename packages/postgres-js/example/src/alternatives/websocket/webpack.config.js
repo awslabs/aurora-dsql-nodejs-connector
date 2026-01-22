@@ -30,6 +30,10 @@ export default {
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js', '.jsx'],
+    alias: {
+      'react': path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom')
+    },
     fallback: {
       'process/browser': path.resolve(__dirname, 'node_modules/process/browser.js'),
       "buffer": path.resolve(__dirname, 'node_modules/buffer/index.js'),
