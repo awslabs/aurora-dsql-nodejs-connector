@@ -84,6 +84,7 @@ jobs:
           export PGHOST="$CLUSTER_ENDPOINT"
           export PGUSER="admin"
           export PGPASSWORD=$(aws dsql generate-db-connect-admin-auth-token --hostname "$CLUSTER_ENDPOINT" --region "${{ env.AWS_REGION }}" --expires-in 300)
+          export PGDATABASE="postgres"
           export PGSSLMODE="require"
 
           psql -c "CREATE ROLE \"$NON_ADMIN_USER\" WITH LOGIN"
