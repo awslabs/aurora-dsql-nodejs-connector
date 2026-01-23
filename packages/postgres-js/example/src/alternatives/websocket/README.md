@@ -6,7 +6,7 @@ A React-based web application demonstrating how to connect to Amazon Aurora DSQL
 
 - Browser-based SQL query execution
 - WebSocket connection to Aurora DSQL
-- Amazon Cognito authentication for secure access
+- Amazon Cognito authentication for secure access to IAM credentials
 - React UI with query editor
 - Real-time query results display 
 
@@ -26,7 +26,11 @@ A React-based web application demonstrating how to connect to Amazon Aurora DSQL
 * This code is not tested in every AWS Region. For more information, see
   [AWS Regional Services](https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services).
 
-## Amazon Cognito Setup 
+## Amazon Cognito Setup
+
+This sample uses Amazon Cognito to securely manage IAM credentials without embedding them in JavaScript code. Storing IAM credentials directly in client-side code is unsafe and not recommended for production applications. Amazon Cognito provides temporary, scoped credentials through user authentication, making it suitable for browser-based applications.
+
+**Note:** This sample demonstrates secure credential management for a single-user scenario and is not intended to showcase multi-user query editor functionality.
 
 ### Create User Pool
 
