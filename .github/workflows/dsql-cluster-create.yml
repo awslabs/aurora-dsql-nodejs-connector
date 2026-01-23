@@ -75,3 +75,16 @@ jobs:
             echo "cluster-endpoint=${CLUSTER_ID}.dsql.${{ env.AWS_REGION }}.on.aws"
             echo "region=${{ env.AWS_REGION }}"
           } >> "$GITHUB_OUTPUT"
+
+      - name: Create non-admin role
+        env:
+          NON_ADMIN_USER: "testuser"
+          CLUSTER_ENDPOINT: ${{ steps.create.outputs.cluster-endpoint }}
+        run: |
+          export PGHOST="$CLUSTER_ENDPOINT"
+          export PGUSER="admin"
+          export PGPASSWORD=$(aws dsql generate-db-connect-admin-auth-token --hostname "$CLUSTER_ENDPOINT" --region "${{ env.AWS_REGION }}" --expires-in 300)
+          export PGSSLMODE="require"
+
+          psql -c "CREATE ROLE \"$NON_ADMIN_USER\" WITH LOGIN"
+          psql -c "AWS IAM GRANT \"$NON_ADMIN_USER\" TO '${{ secrets.AWS_IAM_ROLE }}'"
