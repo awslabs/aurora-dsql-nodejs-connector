@@ -143,11 +143,9 @@ All standard [Postgres.js options](https://github.com/porsager/postgres?tab=read
 ## Websocket Connector 
 The websocket connector provides an alternative connection method to Aurora DSQL using WebSockets instead of standard TCP sockets. This is designed for environments where TCP sockets are unavailable. For Node.js server applications, use the standard TCP socket connector shown above.
 
-### Use Case - Edge Compute Runtimes
+### Use Case - Environments Without TCP Sockets
 
-Some JavaScript edge runtimes don't provide Node.js TCP sockets. The WebSocket connector enables DSQL connections from these environments. Since credentials remain server-controlled in edge compute, the security model is similar to traditional server-side applications.
-
-Credentials can be configured using your platform's secrets management (e.g., environment variables, secrets store) as with any server-side application.
+Some JavaScript runtimes don't provide TCP socket support. The WebSocket connector enables DSQL connections from these environments. If credentials remain server-controlled, the security model is similar to traditional server-side applications and credentials can be configured using your platform's secrets management (e.g., environment variables, secrets store).
 
 ### Use Case - Browser Applications
 
