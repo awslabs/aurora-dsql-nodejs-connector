@@ -80,7 +80,7 @@
     "postgres": "^3.4.7",
     "publint": "^0.3.16",
     "ts-jest": "^29.4.5",
-    "tsdown": "^0.18.0",
+    "tsdown": "^0.20.1",
     "typescript": "^5.9.3"
   }
 }
